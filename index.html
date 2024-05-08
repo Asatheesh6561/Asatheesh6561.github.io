@@ -7492,8 +7492,8 @@ The purpose of this project is to understand and predict which people can be con
 <ol>
 <li>Data Collection</li>
 <li>Data Preprocessing</li>
-<li>Machine Learning Analysis / Hypothesis Testing</li>
-<li>Visualizations</li>
+<li>Hypothesis Testing / Exploratory Data Analysis / Visualizations</li>
+<li>Machine Learning Analysis</li>
 <li>Insights / Conclusions<hr/>
 </li>
 </ol>
@@ -7805,6 +7805,7 @@ These features are what we will analyze and use to come to our conclusions at th
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
 <h2 style="text-align: center;">Data Processing</h2>
+<p>In this section, we transform and develop new features in the dataset to extract the most amount of information out of the dataset. Additionally, these transforms will allow better allow our machine learning models to understand the dataset and output a correct classification.</p>
 </div>
 </div>
 </div>
@@ -7816,7 +7817,8 @@ These features are what we will analyze and use to come to our conclusions at th
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># General information from the dataset, which includes the columns, the number of rows, and the data types.</span>
+<span class="n">df</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7831,31 +7833,32 @@ These features are what we will analyze and use to come to our conclusions at th
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>&lt;class 'pandas.core.frame.DataFrame'&gt;
 RangeIndex: 1000 entries, 0 to 999
-Data columns (total 20 columns):
- #   Column                  Non-Null Count  Dtype   
----  ------                  --------------  -----   
- 0   checking_status         1000 non-null   category
- 1   duration                1000 non-null   uint8   
- 2   credit_history          1000 non-null   category
- 3   purpose                 1000 non-null   category
- 4   credit_amount           1000 non-null   float64 
- 5   savings_status          1000 non-null   category
- 6   employment              1000 non-null   category
- 7   installment_commitment  1000 non-null   uint8   
- 8   personal_status         1000 non-null   category
- 9   other_parties           1000 non-null   category
- 10  residence_since         1000 non-null   uint8   
- 11  property_magnitude      1000 non-null   category
- 12  age                     1000 non-null   uint8   
- 13  other_payment_plans     1000 non-null   category
- 14  housing                 1000 non-null   category
- 15  existing_credits        1000 non-null   uint8   
- 16  job                     1000 non-null   category
- 17  num_dependents          1000 non-null   uint8   
- 18  own_telephone           1000 non-null   category
- 19  foreign_worker          1000 non-null   category
-dtypes: category(13), float64(1), uint8(6)
-memory usage: 28.9 KB
+Data columns (total 21 columns):
+ #   Column                  Non-Null Count  Dtype  
+---  ------                  --------------  -----  
+ 0   checking_status         1000 non-null   int32  
+ 1   duration                1000 non-null   float16
+ 2   credit_history          1000 non-null   int32  
+ 3   purpose                 1000 non-null   int32  
+ 4   credit_amount           1000 non-null   float64
+ 5   savings_status          1000 non-null   int32  
+ 6   employment              1000 non-null   int32  
+ 7   installment_commitment  1000 non-null   int32  
+ 8   personal_status         1000 non-null   int32  
+ 9   other_parties           1000 non-null   int32  
+ 10  residence_since         1000 non-null   int32  
+ 11  property_magnitude      1000 non-null   int32  
+ 12  age                     1000 non-null   float16
+ 13  other_payment_plans     1000 non-null   int32  
+ 14  housing                 1000 non-null   int32  
+ 15  existing_credits        1000 non-null   int32  
+ 16  job                     1000 non-null   int32  
+ 17  num_dependents          1000 non-null   int32  
+ 18  own_telephone           1000 non-null   int32  
+ 19  foreign_worker          1000 non-null   int32  
+ 20  class                   1000 non-null   int32  
+dtypes: float16(2), float64(1), int32(18)
+memory usage: 82.2 KB
 </pre>
 </div>
 </div>
@@ -8174,6 +8177,7 @@ memory usage: 28.9 KB
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
 <h2 style="text-align: center;">Hypothesis Testing, Exploratory Data Analysis, and Data Visualization</h2>
+<p>In this section, we explore some initial hypotheses we have about the importance of features relating to the classification and how different features are related to each other. We include visualizations and perform statistical tests to see whether our hypotheses are right.</p>
 </div>
 </div>
 </div>
@@ -8839,7 +8843,7 @@ dtype: float64</pre>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>We first split the data into training and testing, with 20% of the data used for testing / evaluating each model. We use will use four models: KNN, SVM, Random Forest, and MLP to classify good and bad credit risks.</p>
+<p>In this section, we perform analysis with several machine learning models. We first split the data into training and testing, with 20% of the data used for testing / evaluating each model. We use will use four models: KNN, SVM, Random Forest, and MLP to classify good and bad credit risks.</p>
 </div>
 </div>
 </div>
@@ -9418,6 +9422,20 @@ weighted avg       0.69      0.71      0.70       200
 <p>We hope that through this project, you might have learned a little more about the varying factors that go into your credit score. Something important to note is that credit score is defenitely not something you can predict easily, and takes into account many variables, potentially even more than the 20 features we had in this dataset. Our peak accuracy was only around 75% (cross validation accuracy), which means that your credit score isn't just a simple relationship based on those features. Credit scores are determined based on an individual basis, and banks oftentimes like to be more reserved on giving good credit scores than bad ones, as that makes them less likely to lose money. Predicing your credit based on the variables above may be a good marker, but it's always best to go to the banks and have them assess it for you, as predicting it yourself likely won't be accurate.</p>
 <p>We hope that you've also gained some insights into how you would apply machine learning and data science to solve a real world problem like this - we have demonstrated everything from detailed pre-processing and data exploration, to multiple methods of analyzing the data using machine learning. This process can be applied to many problems, and the techniques demonstrated here are important for any data scientist, especially the ability to communicate your analysis through charts and explanations.</p>
 <p>We hope you enjoyed this report, and learned something along the way - thanks for reading!</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 style="text-align:center;">Bibliography</h2>
+Board of Governors of the Federal Reserve System (US). (2023, October 1). Delinquency Rate on All Loans, All Commercial Banks. FRED, Federal Reserve Bank of St. Louis. https://fred.stlouisfed.org/series/DRALACBNUCI. (1994, November 16). 
+
+<p>UCI Machine Learning Repository. Archive.ics.uci.edu. <a href="https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data">https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data</a></p>
 </div>
 </div>
 </div>
