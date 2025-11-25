@@ -1,0 +1,67 @@
+papers:
+  - title: "PICore: Physics-Informed Unsupervised Coreset Selection for Data Efficient Neural Operator Training"
+    authors: "<b> Anirudh Satheesh </b>, Anant Khandelwal, Mucong Ding, Radu Balan"
+    venue: "TMLR 2025"
+    paper_pdf: "/assets/publications/2025_picore/paper.pdf"
+    selected: y
+
+  - title: "cMALC-D: Contextual Multi-Agent LLM-Guided Curriculum Learning with Diversity-Based Context Blending"
+    authors: "<b> Anirudh Satheesh </b>, Keenan Powell, Hua Wei"
+    venue: "CIKM 2025"
+    paper_pdf: "/assets/publications/2025_cmalcd/paper.pdf"
+    code: "https://github.com/DaRL-LibSignal/cMALC-D"
+    selected: y
+
+  - title: "Primal-Only Actor Critic Algorithm for Robust Constrained Average Cost MDPs"
+    authors: "<b> Anirudh Satheesh <sup>‡</sup> </b>, Sooraj Sathish <sup>‡</sup>, Swetha Ganesh, Keenan Powell, Vaneet Aggarwal"
+    venue: "Under Submission to AISTATS 2026"
+    paper_pdf: "/assets/publications/2025_rcmdp/paper.pdf"
+    selected: y
+
+  - title: "Distributionally Robust Self Paced Curriculum Reinforcement Learning"
+    authors: "<b> Anirudh Satheesh </b>, Keenan Powell, Vaneet Aggarwal"
+    venue: "Under Submission to AAMAS 2026"
+    paper_pdf: "/assets/publications/2025_drspcrl/paper.pdf"
+    selected: y
+  
+  - title: "A Constrained Multi-Agent Reinforcement Learning Approach to Autonomous Traffic Signal Control"
+    authors: "<b> Anirudh Satheesh </b>, Keenan Powell"
+    venue: "ACM Journal of Autonomous Transportation Systems 2025"
+    paper_pdf: "/assets/publications/2025_cmarl_traffic/paper.pdf"
+    selected: y
+
+  - title: "EnsemW2S: Can an Ensemble of LLMs be Leveraged to Obtain a Stronger LLM?"
+    authors: Aakriti Agrawal, Mucong Ding, Zora Che, Chenghao Deng, "<b> Anirudh Satheesh </b>, John Langford, Furong Huang"
+    venue: "NeurIPS 2024 Safe Generative AI Workshop"
+    paper_pdf: "/assets/publications/2024_ensemblew2s/paper.pdf"
+    selected: n
+
+  - title: "Model Tampering Attacks Enable More Rigorous Evaluations of LLM Capabilities"
+    authors: Zora Che, Stephen Casper, Robert Kirk, <b> Anirudh Satheesh </b>, Stewart Slocum, Lev E McKinney, Rohit Gandikota, Aidan Ewart, Domenic Rosati, Zichu Wu, Zikui Cai, Bilal Chughtai, Yarin Gal, Furong Huang, Dylan Hadfield-Menell"
+    venue: "TMLR 2025"
+    paper_pdf: "/assets/publications/2025_model_tampering/paper.pdf"
+    selected: n
+
+  - title: "MORSE-500: A Programmatically Controllable Video Benchmark to Stress-Test Multimodal Reasoning"
+    authors: "Zikui Cai, Andrew Wang, <\b> Anirudh Satheesh </b>, Ankit Nakhawa, Hyunwoo Jae, Keenan Powell, Minghui Liu, Neel Jay, Sungbin Oh, Xiyao Wang, Yongyuan Liang, Tom Goldstein, Furong Huang"
+    venue: "Under Submission to ICLR 2026"
+    paper_pdf: "/assets/publications/2025_morse/paper.pdf"
+    selected: n
+
+  - title: "SAFLEX: Self-Adaptive Augmentation via Feature Label Extrapolation"
+    authors: "Mucong Ding, Bang An, Yuancheng Xu, ,<b> Anirudh Satheesh </b>, Furong Huang"
+    venue: "ICLR 2024"
+    paper_pdf: "/assets/publications/2024_saflex/2410.02512v1.pdf"
+    selected: n
+
+  - title: "Uncertainty-Aware Answer Selection for Improved Reasoning in Multi-LLM Systems"
+    authors: "Aakriti Agrawal, Rohith Aralikatti, <b> Anirudh Satheesh </b>, Souradip Chakraborty, Amrit Singh Bedi, Furong Huang"
+    venue: "EMNLP 2025 Findings"
+    paper_pdf: "/assets/publications/2025_uncertainty/paper.pdf"
+    selected: n
+
+  - title: "A Technical Report on 'Erasing the Invisible': The 2024 NeurIPS Competition on Stress Testing Image Watermarks"
+    authors: "Mucong Ding, Bang An, Tahseen Rabbani, Chenghao Deng, <b> Anirudh Satheesh </b>, Souradip Chakraborty, Mehrdad Saberi, Yuxin Wen, Kyle Rui Sang, Aakriti Agrawal, Xuandong Zhao, Mo Zhou, Mary-Anne Hartley, Lei Li, Yu-Xiang Wang, Vishal M. Patel, Soheil Feizi, Tom Goldstein, Furong Huang"
+    venue: "NeurIPS D&B 2025"
+    paper_pdf: "/assets/publications/2025_eti/paper.pdf"
+    selected: n

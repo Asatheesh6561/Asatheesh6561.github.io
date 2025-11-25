@@ -1,0 +1,22 @@
+experiences:
+
+- place: "University of Maryland" 
+  time: "2023 - 2026"
+  title: "Undergraduate Student"
+  subtitle: "Computing Science – Machine Learning, Applied Mathematics"
+  category: "school"
+
+- place: "iEnVizion LLC"
+  time: "Jan 2025 - Present"
+  title: "Machine Learning Intern "
+  subtitle: "Contracted to Audeze LLC"
+  category: "work"
+
+- place: "Sony Interactive Entertainment"
+  time: "Jun 2024 - Aug 2024"
+  title: "Machine Learning Research Intern"
+  subtitle: "Audeze LLC division"
+  category: "work"
+
+
+
