@@ -6,7 +6,7 @@ title: Home
 <div class="docs-section" id="bio">
   <h4>About</h4>
   <p>
-  Hello! I'm an undergraduate student in the Computer Science Department at University of Maryland, College Park. My research interest focuses on developing robust agents and agentic systems. I'm currently working on scaling robust reinforcement learning to foundation models and developing theoretical guarantees for such algorithms.
+  Hello! I recently graduated summa cum laude from the University of Maryland, College Park with degrees in Computer Science (Honors) and Applied Mathematics. My research interest focuses on developing robust agents and agentic systems. I'm currently working on scaling robust reinforcement learning to foundation models and developing theoretical guarantees for such algorithms. I am incoming at <a href="https://qlabs.sh/" target="_blank">Qlabs</a>.
   </p>
   <p>
     I've been fortunate to work with and be advised by the following professors: <a href="https://furong-huang.com/" target="_blank">Furong Huang</a> on LLM safety and reasoning, <a href="https://math.umd.edu/~rvbalan/" target="_blank">Radu Balan</a> on physics-informed machine learning, <a href="https://labs.engineering.asu.edu/hw/" target="_blank">Hua Wei</a> on multi-agent reinforcement learning, and <a href="https://web.ics.purdue.edu/~vaneet/?_ga=2.240536195.1482563088.1764030052-385827614.1754536754" target="_blank">Vaneet Aggarwal</a> on robust reinforcement learning.
@@ -48,83 +48,57 @@ title: Home
   </p>
 
   <ul class="tab-nav">
-    <li><div class="button active" data-ref="#papers-selected">Selected</div></li>
-    <li><div class="button" data-ref="#papers-all">All</div></li>
+    {% for cat in site.data.publication_categories.categories %}
+      {% if forloop.first %}
+        <li><div class="button active" data-ref="#papers-{{ cat.slug }}">{{ cat.label }}</div></li>
+      {% else %}
+        <li><div class="button" data-ref="#papers-{{ cat.slug }}">{{ cat.label }}</div></li>
+      {% endif %}
+    {% endfor %}
   </ul>
 
   <div class="tab-content">
-    <div class="tab-pane active" id="papers-selected">
-      {% assign selected_papers = site.data.publications.papers | where: "selected", "y" %}
-      {% for paper in selected_papers %}
-        <div class="paper">
-          <p class="title"><b>{{ paper.title }}</b></p>
-          <p>{{ paper.authors }}</p>
-          <p><i>{{ paper.venue }}</i></p>
-           <div class="paper-buttons">
-            {% if paper.paper_pdf %}
-              <a class="button" href="{{ paper.paper_pdf | prepend: site.baseurl }}" target="_blank">Paper</a>
-            {% endif %}
+    {% for cat in site.data.publication_categories.categories %}
+      {% assign cat_papers = site.data.publications.papers | where: "category", cat.slug %}
+      <div class="tab-pane{% if forloop.first %} active{% endif %}" id="papers-{{ cat.slug }}">
+        {% for paper in cat_papers %}
+          <div class="paper">
+            <p class="title"><b>{{ paper.title }}</b></p>
+            <p>{{ paper.authors }}</p>
+            <p>{% assign venues = paper.venue | split: ";" %}{% for v in venues %}<i>{{ v }}</i>{% unless forloop.last %}<br/>{% endunless %}{% endfor %}</p>
+            <div class="paper-buttons">
+              {% if paper.paper_pdf %}
+                <a class="button" href="{{ paper.paper_pdf | prepend: site.baseurl }}" target="_blank">Paper</a>
+              {% endif %}
 
-            {% if paper.slides %}
-              <a class="button" href="{{ paper.slides | prepend: site.baseurl }}" target="_blank">Slides</a>
-            {% endif %}
+              {% if paper.slides %}
+                <a class="button" href="{{ paper.slides | prepend: site.baseurl }}" target="_blank">Slides</a>
+              {% endif %}
 
-            {% if paper.poster %}
-              <a class="button" href="{{ paper.poster | prepend: site.baseurl }}" target="_blank">Poster</a>
-            {% endif %}
+              {% if paper.poster %}
+                <a class="button" href="{{ paper.poster | prepend: site.baseurl }}" target="_blank">Poster</a>
+              {% endif %}
 
-            {% if paper.video %}
-              <a class="button" href="{{ paper.video }}" target="_blank">Video</a>
-            {% endif %}
+              {% if paper.video %}
+                <a class="button" href="{{ paper.video }}" target="_blank">Video</a>
+              {% endif %}
 
-            {% if paper.code %}
-              <a class="button" href="{{ paper.code }}" target="_blank">Code</a>
-            {% endif %}
+              {% if paper.code %}
+                <a class="button" href="{{ paper.code }}" target="_blank">Code</a>
+              {% endif %}
 
-            {% if paper.data %}
-              <a class="button" href="{{ paper.data }}" target="_blank">Data</a>
-            {% endif %}
+              {% if paper.website %}
+                <a class="button" href="{{ paper.website }}" target="_blank">Website</a>
+              {% endif %}
 
+              {% if paper.data %}
+                <a class="button" href="{{ paper.data }}" target="_blank">Data</a>
+              {% endif %}
+            </div>
           </div>
-        </div>
-      {% endfor %}
-    </div>
-
-    <div class="tab-pane" id="papers-all">
-      {% for paper in site.data.publications.papers %}
-        <div class="paper">
-          <p class="title"><b>{{ paper.title }}</b></p>
-          <p>{{ paper.authors }}</p>
-          <p><i>{{ paper.venue }}</i></p>
-           <div class="paper-buttons">
-            {% if paper.paper_pdf %}
-              <a class="button" href="{{ paper.paper_pdf | prepend: site.baseurl }}" target="_blank">Paper</a>
-            {% endif %}
-
-            {% if paper.slides %}
-              <a class="button" href="{{ paper.slides | prepend: site.baseurl }}" target="_blank">Slides</a>
-            {% endif %}
-
-            {% if paper.poster %}
-              <a class="button" href="{{ paper.poster | prepend: site.baseurl }}" target="_blank">Poster</a>
-            {% endif %}
-
-            {% if paper.video %}
-              <a class="button" href="{{ paper.video }}" target="_blank">Video</a>
-            {% endif %}
-
-            {% if paper.code %}
-              <a class="button" href="{{ paper.code }}" target="_blank">Code</a>
-            {% endif %}
-
-            {% if paper.data %}
-              <a class="button" href="{{ paper.data }}" target="_blank">Data</a>
-            {% endif %}
-
-          </div>
-        </div>
-      {% endfor %}
-    </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
   </div>
 </div>
 

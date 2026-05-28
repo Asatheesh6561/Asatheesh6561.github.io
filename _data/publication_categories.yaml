@@ -1,0 +1,11 @@
+categories:
+  - slug: foundational-model-safety
+    label: "Safety & Provenance"
+  - slug: llm-reasoning
+    label: "LLM Reasoning"
+  - slug: rl-theory
+    label: "RL Theory"
+  - slug: multi-agent-rl
+    label: "Multi-Agent RL"
+  - slug: miscellaneous
+    label: "Miscellaneous"
