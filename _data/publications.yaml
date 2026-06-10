@@ -59,7 +59,7 @@ papers:
 
   - title: "Global Convergence of Average Reward Constrained MDPs with Neural Critic and General Policy Parameterization"
     authors: "<b>Anirudh Satheesh</b>, Pankaj Kumar Barman, Washim Uddin Mondal, Vaneet Aggarwal"
-    venue: "Under Submission to UAI 2026"
+    venue: "UAI 2026"
     paper_pdf: "https://arxiv.org/abs/2603.07698"
     category: rl-theory
     selected: n
