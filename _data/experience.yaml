@@ -3,10 +3,10 @@ experiences:
 - place: "University of Maryland" 
   time: "2023 - 2026"
   title: "Undergraduate Student"
-  subtitle: "Computing Science – Machine Learning, Applied Mathematics"
+  subtitle: "Computer Science – Machine Learning, Applied Mathematics"
   category: "school"
 
-- place: "Qlabs"
+- place: "QLabs"
   website: "https://qlabs.sh/"
   time: "Jun 2026 - Aug 2026"
   title: "Machine Learning Research Intern"

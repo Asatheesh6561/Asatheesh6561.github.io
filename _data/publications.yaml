@@ -8,38 +8,10 @@ papers:
     category: foundational-model-safety
     selected: n
 
-  - title: "Model Tampering Attacks Enable More Rigorous Evaluations of LLM Capabilities"
-    authors: "Zora Che, Stephen Casper, Robert Kirk, <b>Anirudh Satheesh</b>, Stewart Slocum, Lev E McKinney, Rohit Gandikota, Aidan Ewart, Domenic Rosati, Zichu Wu, Zikui Cai, Bilal Chughtai, Yarin Gal, Furong Huang, Dylan Hadfield-Menell"
-    venue: "TMLR 2025"
-    paper_pdf: "/assets/publications/2025_model_tampering/paper.pdf"
-    category: foundational-model-safety
-    selected: n
-
-  - title: "A Technical Report on 'Erasing the Invisible': The 2024 NeurIPS Competition on Stress Testing Image Watermarks"
-    authors: "Mucong Ding, Bang An, Tahseen Rabbani, Chenghao Deng, <b>Anirudh Satheesh</b>, Souradip Chakraborty, Mehrdad Saberi, Yuxin Wen, Kyle Rui Sang, Aakriti Agrawal, Xuandong Zhao, Mo Zhou, Mary-Anne Hartley, Lei Li, Yu-Xiang Wang, Vishal M. Patel, Soheil Feizi, Tom Goldstein, Furong Huang"
-    venue: "NeurIPS D&B 2025"
-    paper_pdf: "/assets/publications/2025_eti/paper.pdf"
-    category: foundational-model-safety
-    selected: n
-
   - title: "MORSE-500: A Programmatically Controllable Video Benchmark to Stress-Test Multimodal Reasoning"
     authors: "Zikui Cai, Andrew Wang, <b>Anirudh Satheesh</b>, Ankit Nakhawa, Hyunwoo Jae, Keenan Powell, Minghui Liu, Neel Jay, Sungbin Oh, Xiyao Wang, Yongyuan Liang, Tom Goldstein, Furong Huang"
     venue: "Under Review at ECCV 2026"
     paper_pdf: "/assets/publications/2025_morse/paper.pdf"
-    category: llm-reasoning
-    selected: n
-
-  - title: "EnsemW2S: Can an Ensemble of LLMs be Leveraged to Obtain a Stronger LLM?"
-    authors: "Aakriti Agrawal, Mucong Ding, Zora Che, Chenghao Deng, <b>Anirudh Satheesh</b>, John Langford, Furong Huang"
-    venue: "NeurIPS 2024 Safe Generative AI Workshop; ACL 2026 Findings"
-    paper_pdf: "/assets/publications/2024_ensemblew2s/paper.pdf"
-    category: llm-reasoning
-    selected: n
-
-  - title: "Uncertainty-Aware Answer Selection for Improved Reasoning in Multi-LLM Systems"
-    authors: "Aakriti Agrawal, Rohith Aralikatti, <b>Anirudh Satheesh</b>, Souradip Chakraborty, Amrit Singh Bedi, Furong Huang"
-    venue: "EMNLP 2025 Findings"
-    paper_pdf: "/assets/publications/2025_uncertainty/paper.pdf"
     category: llm-reasoning
     selected: n
 
@@ -57,6 +29,14 @@ papers:
     category: rl-theory
     selected: n
 
+  - title: "DADIFF: Diffusion-Driven Cross-Domain Policy Adaptation for Reinforcement Learning"
+    authors: "Hanyang Chen, <b>Anirudh Satheesh</b>, Longchao Da, Hua Wei"
+    venue: "IROS 2026"
+    paper_pdf: "/assets/publications/2026_dadiff/paper.pdf"
+    code: "https://anonymous.4open.science/r/DADiff-release-DB61/"
+    category: rl-theory
+    selected: n
+
   - title: "Global Convergence of Average Reward Constrained MDPs with Neural Critic and General Policy Parameterization"
     authors: "<b>Anirudh Satheesh</b>, Pankaj Kumar Barman, Washim Uddin Mondal, Vaneet Aggarwal"
     venue: "UAI 2026"
@@ -71,12 +51,40 @@ papers:
     category: rl-theory
     selected: y
 
+  - title: "EnsemW2S: Can an Ensemble of LLMs be Leveraged to Obtain a Stronger LLM?"
+    authors: "Aakriti Agrawal, Mucong Ding, Zora Che, Chenghao Deng, <b>Anirudh Satheesh</b>, John Langford, Furong Huang"
+    venue: "NeurIPS 2024 Safe Generative AI Workshop; ACL 2026 Findings"
+    paper_pdf: "/assets/publications/2024_ensemblew2s/paper.pdf"
+    category: llm-reasoning
+    selected: n
+
+  - title: "Model Tampering Attacks Enable More Rigorous Evaluations of LLM Capabilities"
+    authors: "Zora Che, Stephen Casper, Robert Kirk, <b>Anirudh Satheesh</b>, Stewart Slocum, Lev E McKinney, Rohit Gandikota, Aidan Ewart, Domenic Rosati, Zichu Wu, Zikui Cai, Bilal Chughtai, Yarin Gal, Furong Huang, Dylan Hadfield-Menell"
+    venue: "TMLR 2025"
+    paper_pdf: "/assets/publications/2025_model_tampering/paper.pdf"
+    category: foundational-model-safety
+    selected: n
+
+  - title: "A Technical Report on 'Erasing the Invisible': The 2024 NeurIPS Competition on Stress Testing Image Watermarks"
+    authors: "Mucong Ding, Bang An, Tahseen Rabbani, Chenghao Deng, <b>Anirudh Satheesh</b>, Souradip Chakraborty, Mehrdad Saberi, Yuxin Wen, Kyle Rui Sang, Aakriti Agrawal, Xuandong Zhao, Mo Zhou, Mary-Anne Hartley, Lei Li, Yu-Xiang Wang, Vishal M. Patel, Soheil Feizi, Tom Goldstein, Furong Huang"
+    venue: "NeurIPS D&B 2025"
+    paper_pdf: "/assets/publications/2025_eti/paper.pdf"
+    category: foundational-model-safety
+    selected: n
+
   - title: "Primal-Only Actor Critic Algorithm for Robust Constrained Average Cost MDPs"
     authors: "<b>Anirudh Satheesh<sup>‡</sup></b>, Sooraj Sathish<sup>‡</sup>, Swetha Ganesh, Keenan Powell, Vaneet Aggarwal"
     venue: "arXiv"
     paper_pdf: "/assets/publications/2025_rcmdp/paper.pdf"
     category: rl-theory
     selected: y
+
+  - title: "Uncertainty-Aware Answer Selection for Improved Reasoning in Multi-LLM Systems"
+    authors: "Aakriti Agrawal, Rohith Aralikatti, <b>Anirudh Satheesh</b>, Souradip Chakraborty, Amrit Singh Bedi, Furong Huang"
+    venue: "EMNLP 2025 Findings"
+    paper_pdf: "/assets/publications/2025_uncertainty/paper.pdf"
+    category: llm-reasoning
+    selected: n
 
   - title: "cMALC-D: Contextual Multi-Agent LLM-Guided Curriculum Learning with Diversity-Based Context Blending"
     authors: "<b>Anirudh Satheesh</b>, Keenan Powell, Hua Wei"
