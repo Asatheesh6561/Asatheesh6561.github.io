@@ -12,6 +12,8 @@ papers:
     authors: "Zikui Cai, Andrew Wang, <b>Anirudh Satheesh</b>, Ankit Nakhawa, Hyunwoo Jae, Keenan Powell, Minghui Liu, Neel Jay, Sungbin Oh, Xiyao Wang, Yongyuan Liang, Tom Goldstein, Furong Huang"
     venue: "Under Review at ECCV 2026"
     paper_pdf: "/assets/publications/2025_morse/paper.pdf"
+    code: "https://github.com/morse-benchmark/morse-500"
+    website: "https://morse-500.github.io/"
     category: llm-reasoning
     selected: n
 
@@ -48,6 +50,7 @@ papers:
     authors: "<b>Anirudh Satheesh</b>, Keenan Powell, Vaneet Aggarwal"
     venue: "RLC 2026"
     paper_pdf: "/assets/publications/2025_drspcrl/paper.pdf"
+    website: "/dr-spcrl/"
     category: rl-theory
     selected: y
 
@@ -83,6 +86,7 @@ papers:
     authors: "Aakriti Agrawal, Rohith Aralikatti, <b>Anirudh Satheesh</b>, Souradip Chakraborty, Amrit Singh Bedi, Furong Huang"
     venue: "EMNLP 2025 Findings"
     paper_pdf: "/assets/publications/2025_uncertainty/paper.pdf"
+    code: "https://github.com/Aakriti05/multi-llm-uncertainty"
     category: llm-reasoning
     selected: n
 
