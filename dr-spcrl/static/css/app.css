@@ -1,0 +1,507 @@
+/* DR-SPCRL site styles (layered on top of bulma + nerfies index.css). */
+
+:root {
+  --accent: #3273dc;
+  --accent-dark: #245da6;
+  --ours: #d23a3a;
+  --ink: #1a1a1a;
+  --bg-alt: #f5f7fb;
+}
+
+body {
+  font-family: 'Noto Sans', sans-serif;
+  color: var(--ink);
+}
+
+/* ---------- Section-reveal (fade + slide, replays on scroll) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+.publication-title {
+  font-family: 'Google Sans', sans-serif;
+}
+
+.section-alt {
+  background: var(--bg-alt);
+}
+
+.tagline {
+  margin-top: 1.5rem;
+  font-size: 1.15rem;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.55;
+}
+
+.publication-links {
+  margin-top: 1.25rem;
+}
+.publication-links .button {
+  margin: 0 0.25rem;
+}
+
+/* ---------- KL ball explainer ---------- */
+
+.kl-explainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: center;
+  margin-top: 2rem;
+}
+.kl-canvas-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+#kl-canvas { width: 100%; height: auto; display: block; }
+#kl-worlds circle { cursor: pointer; transition: r 0.15s ease, fill 0.15s ease; }
+#kl-worlds circle:hover { r: 6; }
+.kl-controls label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+.kl-eps-label { font-family: 'Google Sans', sans-serif; font-size: 1.2rem; }
+#kl-slider { width: 100%; }
+.kl-readout {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.25rem;
+}
+.kl-readout > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.kl-stat-val {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+}
+.kl-stat-cap {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+.kl-hover-wrap {
+  margin-top: 1rem;
+  position: relative;
+}
+.kl-hover-video {
+  width: 100%;
+  border-radius: 8px;
+  background: #000;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: none;
+}
+.kl-hover-video.is-active { display: block; }
+.kl-hover-stats {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: #888;
+  font-style: italic;
+}
+.kl-hover-stats.is-active {
+  color: #1a1a1a;
+  font-style: normal;
+}
+.kl-stat-label {
+  font-family: 'Google Sans', sans-serif;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+}
+.kl-stat-num {
+  font-family: 'Castoro', serif;
+  font-size: 0.95rem;
+}
+.kl-hint {
+  margin-top: 1rem;
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.legend-low, .legend-high {
+  font-weight: 600;
+}
+.legend-low  { color: #a50026; }
+.legend-high { color: #1a9850; }
+
+/* ---------- Motivation (scroll-triggered) ---------- */
+
+.section-motivation {
+  background: #ffffff;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+.motivation-chart {
+  background: #fafbff;
+  border-radius: 12px;
+  padding: 0.5rem;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  height: 420px;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+.motivation-takeaway {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 1rem;
+  color: #444;
+}
+
+/* ---------- Mechanism explainer (formal derivation, stacked steps) ---------- */
+
+.mech-explainer {
+  margin: 2rem auto 2.5rem;
+  max-width: 880px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.mech-step-card {
+  background: white;
+  border: 1px solid #e8eaf0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem 1.25rem 4.25rem;
+  position: relative;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.mech-step-card-out {
+  border-color: #d23a3a;
+  box-shadow: 0 2px 12px rgba(210,58,58,0.18);
+}
+.mech-step-num {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Google Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.mech-step-card-out .mech-step-num { background: #d23a3a; }
+.mech-step-head {
+  font-family: 'Google Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+}
+.mech-step-body {
+  font-size: 0.94rem;
+  color: #2a2a2a;
+  line-height: 1.55;
+}
+.mech-step-body p { margin: 0.5rem 0; }
+.mech-eq {
+  margin: 0.6rem 0;
+  text-align: center;
+  overflow-x: auto;
+  font-size: 0.96rem;
+}
+.mech-bullets {
+  margin: 0.5rem 0 0.25rem 1.1rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.mech-bullets li { margin-bottom: 0.35rem; }
+.mech-spark {
+  height: 110px;
+  width: 100%;
+  margin: 0.5rem 0 0.25rem;
+}
+.mech-sublaw {
+  margin-top: 1.25rem;
+  padding: 1rem 1.1rem;
+  background: #f6f8fd;
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #2a2a2a;
+}
+.mech-sublaw-title {
+  font-family: 'Google Sans', sans-serif;
+  font-weight: 600;
+  color: var(--accent-dark);
+  margin-bottom: 0.4rem;
+  font-size: 0.98rem;
+}
+.mech-sublaw p { margin: 0.4rem 0; }
+
+.mech-slider-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+.mech-slider-col label {
+  display: block;
+  font-size: 0.88rem;
+  margin-bottom: 0.3rem;
+  color: #444;
+  font-family: 'Google Sans', sans-serif;
+}
+.mech-slider-col label span {
+  color: #d23a3a;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.mech-slider-col input[type="range"] {
+  width: 100%;
+  accent-color: #d23a3a;
+}
+.mech-spark-cap {
+  font-size: 0.82rem;
+  color: #666;
+  line-height: 1.4;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+/* ---------- Loop diagram ---------- */
+
+.loop-diagram {
+  display: grid;
+  grid-template-columns: repeat(7, auto);
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 2rem 0 2.5rem;
+  flex-wrap: wrap;
+}
+.loop-card {
+  background: white;
+  border: 1px solid #e5e7ef;
+  border-radius: 10px;
+  padding: 1rem;
+  width: 165px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  position: relative;
+}
+.loop-card-highlight {
+  border-color: var(--ours);
+  box-shadow: 0 2px 10px rgba(210, 58, 58, 0.18);
+}
+.loop-step {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  background: var(--accent);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.loop-card-highlight .loop-step { background: var(--ours); }
+.loop-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.35rem; }
+.loop-text { font-size: 0.82rem; color: #555; line-height: 1.4; }
+.loop-arrow { align-self: center; color: #888; font-size: 1.3rem; }
+
+/* ---------- Training returns interactive grid ---------- */
+
+.training-grid {
+  width: 100%;
+  height: 920px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+.training-cap {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* ---------- Figures ---------- */
+
+.figure-block {
+  margin: 1.5rem auto;
+  max-width: 950px;
+}
+.figure-block img {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.figure-block figcaption {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 0.75rem;
+  line-height: 1.5;
+}
+
+/* ---------- Results controls / chart / table ---------- */
+
+.results-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+.control-group { text-align: center; }
+.control-label {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #666;
+  margin-bottom: 0.4rem;
+}
+.results-controls .button.is-active {
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+#results-chart {
+  width: 100%;
+  height: 440px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 0.5rem;
+}
+.results-table-wrapper {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+}
+#results-table {
+  font-size: 0.88rem;
+}
+#results-table th {
+  font-family: 'Google Sans', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+#results-table tr.row-ours {
+  background: rgba(210, 58, 58, 0.08) !important;
+  font-weight: 600;
+}
+#results-table td.best {
+  color: var(--ours);
+  font-weight: 600;
+}
+
+.result-highlight {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 1.05rem;
+  color: #444;
+}
+.result-highlight strong { color: var(--ours); }
+
+/* ---------- Epsilon trajectory grid ---------- */
+
+.eps-traj-grid {
+  width: 100%;
+  height: 760px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+.eps-traj-cap {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* ---------- Epsilon per-state grid ---------- */
+
+.eps-grid, .ablation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+.eps-grid figure, .ablation-grid figure { text-align: center; }
+.eps-grid img, .ablation-grid img {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.eps-grid figcaption, .ablation-grid figcaption {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.ablation-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.ablation-controls .button.is-active {
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* ---------- BibTeX ---------- */
+
+#BibTeX pre {
+  background: #1f2330;
+  color: #e6e6e6;
+  padding: 1.25rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .kl-explainer { grid-template-columns: 1fr; }
+  .results-grid { grid-template-columns: 1fr; }
+  .loop-diagram { grid-template-columns: 1fr; }
+  .loop-arrow { display: none; }
+  .ablation-grid { grid-template-columns: 1fr; }
+}

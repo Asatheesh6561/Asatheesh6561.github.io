@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+        content="DR-SPCRL: Distributionally Robust Self-Paced Curriculum Reinforcement Learning.">
+  <meta name="keywords" content="DR-SPCRL, distributionally robust RL, curriculum learning, self-paced">
+  <title>DR-SPCRL: Distributionally Robust Self-Paced Curriculum RL</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="./static/css/app.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$', '$']] }, svg: { fontCache: 'global' } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+</head>
+<body>
+
+<section class="hero reveal">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Distributionally Robust<br>Self-Paced Curriculum RL</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><a href="https://anirudhsatheesh.com" target="_blank">Anirudh Satheesh</a>,</span>
+            <span class="author-block"><a href="https://www.linkedin.com/in/keenan-powell-68229a339" target="_blank">Keenan Powell</a>,</span>
+            <span class="author-block"><a href="https://web.ics.purdue.edu/~vaneet/" target="_blank">Vaneet Aggarwal</a></span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2511.05694"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="ai ai-arxiv"></i></span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://arxiv.org/pdf/2511.05694"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://github.com/Asatheesh6561/DR-SPCRL"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span>
+                  <span>Code</span>
+                </a>
+              </span>
+            </div>
+          </div>
+
+          <p class="tagline">
+            We treat the robustness budget <b>ε</b> as a continuous curriculum that
+            adapts to the agent, yielding a <b>+24.1%</b> robustness gain over
+            fixed or heuristic schedules.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3 has-text-centered">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            A central challenge in reinforcement learning is that policies trained
+            in controlled environments often fail under distribution shifts at
+            deployment. <em>Distributionally Robust Reinforcement Learning</em>
+            (DRRL) optimizes worst-case performance within an uncertainty set of
+            radius&nbsp;<b>ε</b>, but fixing ε exposes a sharp trade-off: small
+            values yield strong nominal performance with weak robustness, while
+            large values destabilize training and produce overly conservative
+            policies.
+          </p>
+          <p>
+            <b>DR-SPCRL</b> removes this trade-off by treating ε as a
+            <em>continuous curriculum</em>. The robustness budget is adapted online
+            from the agent's own per-state response to perturbation, balancing
+            nominal return against robustness throughout training. Across
+            continuous-control benchmarks, DR-SPCRL improves episodic return under
+            perturbation by an average of <b>24.1%</b> over fixed or heuristic
+            schedules.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section section-alt reveal">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Why Distributional Robustness?</h2>
+    <p class="subtitle has-text-centered is-size-6">
+      Drag the slider to expand the robustness budget&nbsp;<b>ε</b>. Every world
+      inside the blue ball is a perturbation the policy must survive. Hover any
+      dot to watch the nominal Hopper try, and fail, in that world.
+    </p>
+
+    <div class="kl-explainer">
+      <div class="kl-canvas-wrapper">
+        <svg id="kl-canvas" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="ballGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#3273dc" stop-opacity="0.45"/>
+              <stop offset="100%" stop-color="#3273dc" stop-opacity="0.05"/>
+            </radialGradient>
+          </defs>
+          <circle id="kl-nominal-dot" cx="200" cy="200" r="6" fill="#222" style="cursor:pointer"/>
+          <text x="210" y="195" font-size="12" fill="#222">P₀, nominal Hopper</text>
+          <circle id="kl-ball" cx="200" cy="200" r="40" fill="url(#ballGrad)" stroke="#3273dc" stroke-width="1.5" pointer-events="none"/>
+          <g id="kl-worlds"></g>
+          <g id="kl-tooltip" style="display:none; pointer-events:none">
+            <rect id="kl-tooltip-bg" x="0" y="0" width="120" height="32" rx="5"
+                  fill="#1a1a1a" opacity="0.92"/>
+            <text id="kl-tooltip-text" x="60" y="20" font-size="11"
+                  fill="#fff" text-anchor="middle"></text>
+          </g>
+        </svg>
+      </div>
+      <div class="kl-controls">
+        <label for="kl-slider"><span class="kl-eps-label">ε = <span id="kl-eps-val">0.20</span></span></label>
+        <input type="range" id="kl-slider" min="0" max="0.5" step="0.01" value="0.2">
+        <div class="kl-readout">
+          <div><span class="kl-stat-val" id="kl-coverage">0</span><span class="kl-stat-cap">worlds covered</span></div>
+        </div>
+        <div class="kl-hover-wrap">
+          <video id="kl-hover-video" class="kl-hover-video" muted loop playsinline preload="metadata"></video>
+          <div id="kl-hover-stats" class="kl-hover-stats">Hover any dot to play a rollout.</div>
+        </div>
+        <p class="kl-hint">
+          Each dot is one perturbed world (action, observation, or environment
+          noise; the type is labeled on hover). Color shows the nominal policy's
+          return there: <span class="legend-low">red is failing</span>,
+          <span class="legend-high">green is near-nominal</span>. As ε grows,
+          the ball covers more failing worlds, that's the cost of using a
+          non-robust policy.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section section-motivation reveal" id="why-curriculum">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Why a Curriculum?</h2>
+    <p class="subtitle has-text-centered is-size-6">
+      Fixing ε forces a sharp trade-off. Small ε helps nominally but collapses
+      under shift; large ε destabilizes training. Scroll to watch each strategy draw in.
+    </p>
+
+    <div id="motivation-chart" class="motivation-chart"></div>
+
+    <p class="motivation-takeaway">
+      A <b>continuous curriculum</b> over ε avoids both failure modes: it
+      starts near nominal and only opens the budget as the agent can handle it.
+    </p>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">The Self-Paced Curriculum</h2>
+    <p class="subtitle has-text-centered is-size-6">
+      Instead of fixing ε or annealing it linearly, DR-SPCRL learns it from the agent's own βs.
+    </p>
+
+    <div class="mech-explainer">
+
+      <div class="mech-step-card">
+        <div class="mech-step-num">1</div>
+        <div class="mech-step-head">The distributionally robust objective</div>
+        <div class="mech-step-body">
+          <p>
+            Let $P_0(\cdot \mid s,a)$ be the nominal transition kernel and let
+            $\mathcal{B}_\varepsilon(P_0)$ be the KL ambiguity ball of radius $\varepsilon$:
+          </p>
+          <div class="mech-eq">
+            $$\mathcal{B}_\varepsilon(P_0)\;=\;\big\{\,P:\;D_{\mathrm{KL}}\!\big(P\,\Vert\,P_0\big)\le\varepsilon\,\big\}.$$
+          </div>
+          <p>
+            DRRL trains a policy that performs well under the <em>worst</em> transition kernel in this ball:
+          </p>
+          <div class="mech-eq">
+            $$J_\varepsilon(\pi)\;=\;\min_{P\in\mathcal{B}_\varepsilon(P_0)}\;\mathbb{E}_{\,\tau\sim(\pi,P)}\!\left[\sum_{t=0}^{\infty}\gamma^t\,r(s_t,a_t)\right],
+            \qquad \pi^\star \in \arg\max_\pi J_\varepsilon(\pi).$$
+          </div>
+          <p>
+            $\varepsilon$ controls the strength of the adversary. Larger $\varepsilon$ admits more
+            distorted dynamics, yielding more conservative but more robust policies; smaller
+            $\varepsilon$ recovers the nominal objective.
+          </p>
+        </div>
+      </div>
+
+      <div class="mech-step-card">
+        <div class="mech-step-num">2</div>
+        <div class="mech-step-head">Dualising the inner minimum: where β comes from</div>
+        <div class="mech-step-body">
+          <p>
+            Fix a state-action pair $(s,a)$ and a value function $V$ produced by the current
+            policy. The one-step DR Bellman backup faces the inner problem
+            $\min_{P}\;\mathbb{E}_{s'\sim P}\!\big[V(s')\big]$
+            subject to $D_{\mathrm{KL}}(P\,\Vert\,P_0)\le\varepsilon$. Forming the Lagrangian and
+            applying the Donsker–Varadhan / Legendre identity for KL-constrained expectations gives
+            the closed form
+          </p>
+          <div class="mech-eq">
+            $$\min_{P\in\mathcal{B}_\varepsilon(P_0)}\!\mathbb{E}_{s'\sim P}\!\big[V(s')\big]
+              \;=\;\max_{\beta\ge 0}\;\Big\{\,
+                {-}\beta\,\log\,\mathbb{E}_{s'\sim P_0}\!\big[\exp(-V(s')/\beta)\big]\;-\;\beta\,\varepsilon
+              \,\Big\}.$$
+          </div>
+          <p>
+            The <strong>dual variable $\beta(s,a)\ge 0$</strong> is the Lagrange multiplier on
+            the KL constraint and acts as a state-dependent temperature: it turns the worst-case
+            min over $s'$ into a soft-min (log-sum-exp) over next-state values. The optimal
+            $\beta^\star(s,a)$ satisfies the stationarity condition
+          </p>
+          <div class="mech-eq">
+            $$\varepsilon
+              \;=\;
+              \log\,\mathbb{E}_{s'\sim P_0}\!\big[\exp(-V(s')/\beta^\star)\big]
+              \;+\;\frac{\mathbb{E}_{s'\sim P_0^\star}\!\big[V(s')\big]}{\beta^\star},
+              \qquad
+              P_0^\star \propto P_0\,\exp(-V/\beta^\star).$$
+          </div>
+          <p>
+            <strong>Interpretation.</strong> When the value $V$ is roughly flat across next states
+            the soft-min is near the mean: a small $\beta$ saturates the KL ball without much
+            value loss, so $\beta^\star$ is small &mdash; the policy is <em>robust</em> here. When
+            $V$ has a sharp bad-state outlier, the adversary concentrates mass there, the soft-min
+            collapses toward that outlier, and $\beta^\star$ grows &mdash; the policy is
+            <em>fragile</em> at $(s,a)$.
+          </p>
+          <div class="mech-spark" id="spark-beta"></div>
+          <div class="mech-spark-cap">
+            Simulated $\beta^\star(s,a)$ along a rollout. Tall red bars are fragile states
+            (sharp worst-case); short bars are robust states.
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-step-card mech-step-card-out">
+        <div class="mech-step-num">3</div>
+        <div class="mech-step-head">Self-paced update: differentiating the dual in $\varepsilon$</div>
+        <div class="mech-step-body">
+          <p>
+            Plugging the dual solution back into the outer max gives the surrogate
+            $L(\pi,\varepsilon)$ used by SPCRL. Adding a self-paced regularizer that pulls
+            $\varepsilon$ toward a target budget $\varepsilon_{\mathrm{budget}}$, the
+            $\varepsilon$-gradient evaluates to
+          </p>
+          <div class="mech-eq">
+            $$\partial_\varepsilon L
+              \;=\;
+              -\;\mathbb{E}_{s\sim d^\pi}\!\big[\beta^\star(s,\pi(s))\big]
+              \;+\;
+              \alpha_{\mathrm{SPCL}}\,(\varepsilon-\varepsilon_{\mathrm{budget}}),$$
+          </div>
+          <p>
+            where $d^\pi$ is the state visitation under the current policy. A gradient descent
+            step on $L$ in $\varepsilon$ is therefore
+          </p>
+          <div class="mech-eq">
+            $$\boxed{\;\;
+              \varepsilon
+              \;\leftarrow\;
+              \varepsilon
+              \;+\;\eta\,\Big(
+                \mathbb{E}_{s\sim d^\pi}\!\big[\beta^\star(s,\pi(s))\big]
+                \;-\;\alpha_{\mathrm{SPCL}}\,(\varepsilon-\varepsilon_{\mathrm{budget}})
+              \Big).\;\;}$$
+          </div>
+          <p>
+            The two terms have opposite signs:
+          </p>
+          <ul class="mech-bullets">
+            <li><b>$+\mathbb{E}[\beta^\star]$:</b> small when the policy is robust everywhere, large
+              when many visited states are fragile. Robust policies see a positive nudge that
+              opens the ball; fragile policies see a small nudge that keeps it closed.</li>
+            <li><b>$-\alpha_{\mathrm{SPCL}}(\varepsilon-\varepsilon_{\mathrm{budget}})$:</b> a
+              linear spring centred at $\varepsilon_{\mathrm{budget}}$ that guarantees the
+              schedule eventually reaches the target even if $\mathbb{E}[\beta^\star]$ stays
+              modest.</li>
+          </ul>
+          <div class="mech-sublaw">
+            <div class="mech-sublaw-title">A scaling law for the curriculum</div>
+            <p>
+              Take the small-$\eta$ continuum limit of the update rule. With
+              $\bar\beta^\star(t):=\mathbb{E}_{s\sim d^{\pi_t}}[\beta^\star(s,\pi_t(s))]$,
+              the curriculum obeys a first-order linear ODE driven by the
+              policy's own fragility:
+            </p>
+            <div class="mech-eq">
+              $$\frac{d\varepsilon}{dt}
+                \;=\;
+                \bar\beta^\star(t)
+                \;-\;\alpha_{\mathrm{SPCL}}\,(\varepsilon - \varepsilon_{\mathrm{budget}}).$$
+            </div>
+            <p>
+              Solving by integrating factor gives a closed-form scaling law
+              with three terms, all stated directly in $\bar\beta^\star$:
+            </p>
+            <div class="mech-eq">
+              $$\boxed{\;\;
+                \varepsilon(t)
+                \;=\;
+                \underbrace{e^{-\alpha_{\mathrm{SPCL}} t}\,\varepsilon(0)}_{\text{initial-state decay}}
+                \;+\;\underbrace{\varepsilon_{\mathrm{budget}}\big(1 - e^{-\alpha_{\mathrm{SPCL}} t}\big)}_{\text{spring relaxation to target}}
+                \;+\;\underbrace{\int_{0}^{t} e^{-\alpha_{\mathrm{SPCL}}(t-s)}\,\bar\beta^\star(s)\,ds}_{\text{exponential low-pass of fragility}}.
+                \;\;}$$
+            </div>
+            <p>
+              The third term is the only one that depends on the agent. It is
+              a <em>causal exponential low-pass</em> of the fragility signal
+              with time constant $1/\alpha_{\mathrm{SPCL}}$: recent values of
+              $\bar\beta^\star$ count more, distant past values fade. While
+              $\bar\beta^\star$ stays high, this term keeps rising and the
+              spring lags &mdash; ε climbs slowly. As the policy hardens and
+              $\bar\beta^\star$ shrinks, the low-pass empties out and the
+              spring dominates, pulling ε toward
+              $\varepsilon_{\mathrm{budget}}$ at rate
+              $\alpha_{\mathrm{SPCL}}$. The two regimes you see in the live
+              curve above &mdash; slow warm-up then fast climb &mdash; come
+              directly from this decomposition; no assumption on the shape of
+              $\bar\beta^\star$ is needed.
+            </p>
+          </div>
+
+          <div class="mech-slider-row">
+            <div class="mech-slider-col">
+              <label>α<sub>SPCL</sub> = <span id="mech-alpha-val">0.05</span></label>
+              <input type="range" id="mech-alpha" min="0" max="0.3" step="0.005" value="0.05">
+            </div>
+            <div class="mech-slider-col">
+              <label>η = <span id="mech-eta-val">0.01</span></label>
+              <input type="range" id="mech-eta" min="0.001" max="0.05" step="0.0005" value="0.01">
+            </div>
+          </div>
+          <div class="mech-spark" id="spark-eps"></div>
+          <div class="mech-spark-cap">
+            Simulated $\varepsilon(t)$ trajectory under SPCRL with the chosen
+            $\alpha_{\mathrm{SPCL}}$ and $\eta$, integrating the update rule above against a
+            synthetic $\mathbb{E}[\beta^\star]$ that decays as the policy hardens.
+            Drag the sliders to retune.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="figure-block">
+      <div id="eps-traj-grid" class="eps-traj-grid"></div>
+      <p class="eps-traj-cap">
+        Trajectories of the robustness budget ε(t) (blue, linear axis) and the
+        dual variable β(t) (orange, log axis) across all 12 (algorithm, env)
+        cells. ε draws in first, then β layers on top. The self-paced rule
+        discovers a non-trivial schedule for each cell.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<section class="section section-alt reveal">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Robustness Results</h2>
+    <p class="subtitle has-text-centered is-size-6">
+      Episodic return under perturbation. Interactive: choose a base algorithm, environment, and perturbation type.
+    </p>
+
+    <div class="results-controls">
+      <div class="control-group">
+        <span class="control-label">Algorithm</span>
+        <div class="buttons has-addons is-centered" id="alg-buttons"></div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Environment</span>
+        <div class="buttons has-addons is-centered" id="env-buttons"></div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Perturbation</span>
+        <div class="buttons has-addons is-centered" id="perturb-buttons"></div>
+      </div>
+    </div>
+
+    <div class="results-grid">
+      <div class="results-chart-wrapper">
+        <div id="results-chart"></div>
+      </div>
+      <div class="results-table-wrapper">
+        <table class="table is-fullwidth is-striped is-hoverable" id="results-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="result-highlight" id="result-highlight"></div>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Training Returns</h2>
+    <div class="figure-block">
+      <div id="training-grid" class="training-grid"></div>
+      <p class="training-cap">
+        Episodic return during training. All 7 methods draw simultaneously
+        across the 3 × 4 (algorithm × environment) grid. DR-SPCRL (teal, dashed)
+        matches or beats every fixed-budget and heuristic-schedule baseline.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<section class="section reveal" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title is-3 has-text-centered">BibTeX</h2>
+    <pre><code>@article{satheesh2025distributionally,
+  title={Distributionally Robust Self Paced Curriculum Reinforcement Learning},
+  author={Satheesh, Anirudh and Powell, Keenan and Aggarwal, Vaneet},
+  journal={arXiv preprint arXiv:2511.05694},
+  year={2025}
+}</code></pre>
+  </div>
+</section>
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered is-size-7">
+          <p>
+            Template adapted from
+            <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>,
+            licensed under
+            <a href="http://creativecommons.org/licenses/by-sa/4.0/" rel="license">CC BY-SA 4.0</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="./static/js/app.js"></script>
+</body>
+</html>

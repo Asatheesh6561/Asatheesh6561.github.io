@@ -1,0 +1,264 @@
+{
+  "env": "Hopper-v4",
+  "checkpoint": "/cmlscratch/anirudhs/RARL/rebuttal/runs/Hopper-v4__sac_continuous__0/sac_continuous.cleanrl_model",
+  "nominal_video": "./static/videos/nominal.mp4",
+  "nominal_return": 3510.3065919909477,
+  "nominal_steps": 1000,
+  "kl_formulas": {
+    "action": "p = 1 - exp(-eps)",
+    "observation": "sigma = 0.1 * sqrt(exp(2*eps/d) - 1), d=11",
+    "environment": "delta = sqrt(2*eps) / 1.5"
+  },
+  "dots": [
+    {
+      "id": 0,
+      "perturbation": "environment",
+      "epsilon": 0.3299806532485232,
+      "sigma": 0.5415866839398006,
+      "video": "./static/videos/dot_00_environment_eps0.33.mp4",
+      "frames": 208,
+      "episodic_return": 678.3178930979013,
+      "episode_steps": 208
+    },
+    {
+      "id": 1,
+      "perturbation": "observation",
+      "epsilon": 0.4950320664568482,
+      "sigma": 0.0306888681853384,
+      "video": "./static/videos/dot_01_observation_eps0.50.mp4",
+      "frames": 137,
+      "episodic_return": 344.0491349323004,
+      "episode_steps": 137
+    },
+    {
+      "id": 2,
+      "perturbation": "observation",
+      "epsilon": 0.14688891420601952,
+      "sigma": 0.016452022805970808,
+      "video": "./static/videos/dot_02_observation_eps0.15.mp4",
+      "frames": 409,
+      "episodic_return": 1330.6375315781574,
+      "episode_steps": 409
+    },
+    {
+      "id": 3,
+      "perturbation": "action",
+      "epsilon": 0.12209541523603006,
+      "sigma": 0.1149360841087782,
+      "video": "./static/videos/dot_03_action_eps0.12.mp4",
+      "frames": 871,
+      "episodic_return": 2918.0297470662044,
+      "episode_steps": 871
+    },
+    {
+      "id": 4,
+      "perturbation": "action",
+      "epsilon": 0.32564282192286387,
+      "sigma": 0.2779369535313143,
+      "video": "./static/videos/dot_04_action_eps0.33.mp4",
+      "frames": 95,
+      "episodic_return": 208.83752144181668,
+      "episode_steps": 95
+    },
+    {
+      "id": 5,
+      "perturbation": "action",
+      "epsilon": 0.06977390358262252,
+      "sigma": 0.06739534535819502,
+      "video": "./static/videos/dot_05_action_eps0.07.mp4",
+      "frames": 986,
+      "episodic_return": 3468.8994573890504,
+      "episode_steps": 986
+    },
+    {
+      "id": 6,
+      "perturbation": "observation",
+      "epsilon": 0.06605612544811827,
+      "sigma": 0.010992095677762414,
+      "video": "./static/videos/dot_06_observation_eps0.07.mp4",
+      "frames": 769,
+      "episodic_return": 2638.9507920269753,
+      "episode_steps": 769
+    },
+    {
+      "id": 7,
+      "perturbation": "action",
+      "epsilon": 0.28169996912211664,
+      "sigma": 0.24549997611847751,
+      "video": "./static/videos/dot_07_action_eps0.28.mp4",
+      "frames": 268,
+      "episodic_return": 803.8358147735664,
+      "episode_steps": 268
+    },
+    {
+      "id": 8,
+      "perturbation": "environment",
+      "epsilon": 0.2597927113963801,
+      "sigma": 0.4805484934682036,
+      "video": "./static/videos/dot_08_environment_eps0.26.mp4",
+      "frames": 101,
+      "episodic_return": 225.9128738870913,
+      "episode_steps": 101
+    },
+    {
+      "id": 9,
+      "perturbation": "action",
+      "epsilon": 0.4627254979367835,
+      "sigma": 0.37043457420066794,
+      "video": "./static/videos/dot_09_action_eps0.46.mp4",
+      "frames": 204,
+      "episodic_return": 581.5826116900464,
+      "episode_steps": 204
+    },
+    {
+      "id": 10,
+      "perturbation": "environment",
+      "epsilon": 0.3331518145209547,
+      "sigma": 0.5441828242795326,
+      "video": "./static/videos/dot_10_environment_eps0.33.mp4",
+      "frames": 60,
+      "episodic_return": 112.31911999341729,
+      "episode_steps": 60
+    },
+    {
+      "id": 11,
+      "perturbation": "observation",
+      "epsilon": 0.28135294096978125,
+      "sigma": 0.022909845123397905,
+      "video": "./static/videos/dot_11_observation_eps0.28.mp4",
+      "frames": 1000,
+      "episodic_return": 3527.2080618641844,
+      "episode_steps": 1000
+    },
+    {
+      "id": 12,
+      "perturbation": "observation",
+      "epsilon": 0.27359304592707695,
+      "sigma": 0.022583667834968735,
+      "video": "./static/videos/dot_12_observation_eps0.27.mp4",
+      "frames": 491,
+      "episodic_return": 1615.692905413741,
+      "episode_steps": 491
+    },
+    {
+      "id": 13,
+      "perturbation": "environment",
+      "epsilon": 0.16138171491229888,
+      "sigma": 0.37874848284234325,
+      "video": "./static/videos/dot_13_environment_eps0.16.mp4",
+      "frames": 117,
+      "episodic_return": 303.9193512881471,
+      "episode_steps": 117
+    },
+    {
+      "id": 14,
+      "perturbation": "environment",
+      "epsilon": 0.05530731149412764,
+      "sigma": 0.22172517823072505,
+      "video": "./static/videos/dot_14_environment_eps0.06.mp4",
+      "frames": 1000,
+      "episodic_return": 3104.291456483703,
+      "episode_steps": 1000
+    },
+    {
+      "id": 15,
+      "perturbation": "observation",
+      "epsilon": 0.1365809647933898,
+      "sigma": 0.015856798995687357,
+      "video": "./static/videos/dot_15_observation_eps0.14.mp4",
+      "frames": 141,
+      "episodic_return": 352.3077689290734,
+      "episode_steps": 141
+    },
+    {
+      "id": 16,
+      "perturbation": "action",
+      "epsilon": 0.3614144543968276,
+      "sigma": 0.3033098076909133,
+      "video": "./static/videos/dot_16_action_eps0.36.mp4",
+      "frames": 227,
+      "episodic_return": 663.4575680517887,
+      "episode_steps": 227
+    },
+    {
+      "id": 17,
+      "perturbation": "observation",
+      "epsilon": 0.14027302579414785,
+      "sigma": 0.016072398985900706,
+      "video": "./static/videos/dot_17_observation_eps0.14.mp4",
+      "frames": 140,
+      "episodic_return": 331.76228241953976,
+      "episode_steps": 140
+    },
+    {
+      "id": 18,
+      "perturbation": "environment",
+      "epsilon": 0.21629133977099302,
+      "sigma": 0.4384734526574296,
+      "video": "./static/videos/dot_18_environment_eps0.22.mp4",
+      "frames": 147,
+      "episodic_return": 393.60544677995915,
+      "episode_steps": 147
+    },
+    {
+      "id": 19,
+      "perturbation": "action",
+      "epsilon": 0.05168040892343418,
+      "sigma": 0.05036768763588351,
+      "video": "./static/videos/dot_19_action_eps0.05.mp4",
+      "frames": 447,
+      "episodic_return": 1468.9445743472697,
+      "episode_steps": 447
+    },
+    {
+      "id": 20,
+      "perturbation": "observation",
+      "epsilon": 0.4235214784107855,
+      "sigma": 0.028292453789658528,
+      "video": "./static/videos/dot_20_observation_eps0.42.mp4",
+      "frames": 142,
+      "episodic_return": 359.44806147010553,
+      "episode_steps": 142
+    },
+    {
+      "id": 21,
+      "perturbation": "environment",
+      "epsilon": 0.11950748647764795,
+      "sigma": 0.32592771724574204,
+      "video": "./static/videos/dot_21_environment_eps0.12.mp4",
+      "frames": 265,
+      "episodic_return": 867.0762223933087,
+      "episode_steps": 265
+    },
+    {
+      "id": 22,
+      "perturbation": "action",
+      "epsilon": 0.17041968705370347,
+      "sigma": 0.15668918431481116,
+      "video": "./static/videos/dot_22_action_eps0.17.mp4",
+      "frames": 137,
+      "episodic_return": 331.6719850352382,
+      "episode_steps": 137
+    },
+    {
+      "id": 23,
+      "perturbation": "action",
+      "epsilon": 0.4461494692913729,
+      "sigma": 0.35991190860227273,
+      "video": "./static/videos/dot_23_action_eps0.45.mp4",
+      "frames": 247,
+      "episodic_return": 745.6867315886457,
+      "episode_steps": 247
+    },
+    {
+      "id": 24,
+      "perturbation": "environment",
+      "epsilon": 0.27940586444079046,
+      "sigma": 0.4983580724657861,
+      "video": "./static/videos/dot_24_environment_eps0.28.mp4",
+      "frames": 442,
+      "episodic_return": 1259.6976748932202,
+      "episode_steps": 442
+    }
+  ]
+}
