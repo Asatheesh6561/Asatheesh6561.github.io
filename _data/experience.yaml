@@ -6,17 +6,17 @@ experiences:
   title: "Member of Technical Staff"
   category: "work"
 
-- place: "University of Maryland"
-  time: "Aug 2023 - May 2026"
-  title: "Undergraduate Student"
-  subtitle: "Computer Science (High Honors) – Machine Learning, Applied Mathematics"
-  category: "school"
-
 - place: "QLabs"
   website: "https://qlabs.sh/"
   time: "Jun 2026 - Aug 2026"
   title: "Machine Learning Research Intern"
   category: "work"
+
+- place: "University of Maryland"
+  time: "Aug 2023 - May 2026"
+  title: "Undergraduate Student"
+  subtitle: "Computer Science (High Honors) – Machine Learning, Applied Mathematics"
+  category: "school"
 
 - place: "iEnVizion LLC"
   time: "Jan 2025 - May 2026"
