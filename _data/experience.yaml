@@ -3,8 +3,14 @@ experiences:
 - place: "University of Maryland" 
   time: "2023 - 2026"
   title: "Undergraduate Student"
-  subtitle: "Computer Science – Machine Learning, Applied Mathematics"
+  subtitle: "Computer Science (High Honors) – Machine Learning, Applied Mathematics"
   category: "school"
+
+- place: "QLabs"
+  website: "https://qlabs.sh/"
+  time: "Aug 2026 - Present"
+  title: "Member of Technical Staff"
+  category: "work"
 
 - place: "QLabs"
   website: "https://qlabs.sh/"
@@ -13,7 +19,7 @@ experiences:
   category: "work"
 
 - place: "iEnVizion LLC"
-  time: "Jan 2025 - Present"
+  time: "Jan 2025 - May 2026"
   title: "Machine Learning Intern "
   subtitle: "Contracted to Audeze LLC"
   category: "work"
