@@ -1,16 +1,16 @@
 experiences:
 
-- place: "University of Maryland" 
-  time: "2023 - 2026"
-  title: "Undergraduate Student"
-  subtitle: "Computer Science (High Honors) – Machine Learning, Applied Mathematics"
-  category: "school"
-
 - place: "QLabs"
   website: "https://qlabs.sh/"
   time: "Aug 2026 - Present"
   title: "Member of Technical Staff"
   category: "work"
+
+- place: "University of Maryland"
+  time: "Aug 2023 - May 2026"
+  title: "Undergraduate Student"
+  subtitle: "Computer Science (High Honors) – Machine Learning, Applied Mathematics"
+  category: "school"
 
 - place: "QLabs"
   website: "https://qlabs.sh/"
