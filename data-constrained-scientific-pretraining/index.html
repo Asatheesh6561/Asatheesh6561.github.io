@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyper-Epoch Training for Data-Constrained Scientific Pretraining</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,450;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Layout: the Q Labs Research article template (sticky outline + 800px column), light only like the house site.
+     Series colors are the validated categorical order already used by the chem figures. */
+  :root {
+    color-scheme: light;
+    --bg: #f6f8fb; --text: #0f172a; --muted: #64748b; --accent: #1d4ed8; --rule: #dde3ec; --rule-strong: #94a3b8;
+    --box: #e8ecf2; --panel: #ffffff;
+    --full: #2a78d6; --full-tint: #e4eefb; --single: #eb6834; --nodist: #1baf7a; --noloop: #eda100; --neither: #e87ba4;
+    --xu: #008300; --ref: #0f172a; --me: #a9b2be;
+    --display: 'Space Grotesk', system-ui, sans-serif; --body: 'IBM Plex Sans', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  p { margin: 0 0 1.15em; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.2; }
+  .label, .tldr > h2, .references > h2, .appendix-start {
+    font-family: var(--body); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  code, .mono { font-family: var(--mono); font-size: .88em; }
+
+  .page { display: grid; grid-template-columns: 210px minmax(0, 800px); column-gap: max(56px, calc((100vw - 1074px) / 2)); padding: 40px 24px 96px 40px; }
+  main { min-width: 0; }
+  .outline { position: sticky; top: 28px; align-self: start; padding-top: 52px; max-height: calc(100vh - 28px); overflow-y: auto; font-size: 13px; line-height: 1.4; }
+  .outline a, .contents-inline a { display: block; padding: 5px 0 5px 12px; border-left: 2px solid var(--rule); color: var(--muted); text-decoration: none; }
+  .outline a.sub, .contents-inline a.sub { padding-left: 24px; font-size: 11.5px; }
+  .outline .num, .contents-inline .num { color: var(--rule-strong); font-variant-numeric: tabular-nums; }
+  .outline a:hover .ttl { color: var(--text); }
+  .outline a.active { border-color: var(--accent); }
+  .outline a.active .ttl { color: var(--text); font-weight: 600; }
+  .outline a.active .num { color: var(--accent); }
+  .contents-inline { display: none; margin: 0 0 34px; font-size: 14px; line-height: 1.4; }
+
+  header.title { text-align: center; padding: 40px 0 30px; }
+  header.title .label { margin-bottom: 22px; }
+  h1 { font-size: 46px; font-weight: 500; line-height: 1.06; letter-spacing: -.03em; margin: 0 0 20px; text-wrap: balance; }
+  .authors { margin: 0; font-size: 16px; font-weight: 450; }
+  .dek { max-width: 650px; margin: 0 auto 14px; color: var(--muted); font-size: 18px; line-height: 1.5; }
+  .authors .todo { color: var(--muted); font-style: italic; }
+  .meta { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+  .meta > span { display: inline-block; margin: 0 .7em; }
+
+  .tldr { margin: 6px 0 34px; padding: 20px 26px 12px; border-radius: 10px; background: var(--box); }
+  .tldr > h2 { font-size: 13px; margin-bottom: 12px; }
+  .tldr ul { margin: 0; padding-left: 1.15em; }
+  .tldr li { margin-bottom: .6em; }
+
+  h2 { font-size: 26px; font-weight: 600; margin: 2.2em 0 .6em; text-wrap: balance; }
+  h3 { font-size: 19px; font-weight: 600; margin: 1.6em 0 .5em; }
+  h2 .num, h3 .num { color: var(--muted); font-weight: 500; margin-right: .35em; font-variant-numeric: tabular-nums; }
+  .runin { font-weight: 600; }
+  ul { padding-left: 1.3em; margin: 0 0 1.15em; }
+  li { margin-bottom: .5em; }
+
+  figure { margin: 2.1em 0; }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }
+  figcaption { margin-top: 10px; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+  figcaption .fignum { color: var(--text); font-weight: 600; }
+  figure.table figcaption { margin: 0 0 12px; }
+  .scroll { overflow-x: auto; }
+
+  table.tab { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  table.tab th, table.tab td { padding: 5px 8px; white-space: nowrap; }
+  table.tab .l { text-align: left; } table.tab .c { text-align: center; } table.tab .r { text-align: right; }
+  table.tab thead th { font-weight: 600; }
+  table.tab thead tr:first-child th { border-top: 1.5px solid var(--text); }
+  table.tab thead tr:last-child th { border-bottom: 1px solid var(--rule-strong); }
+  table.tab tbody:last-child tr:last-child td { border-bottom: 1.5px solid var(--text); }
+  table.tab tbody.rule tr:first-child td { border-top: 1px solid var(--rule-strong); }
+  table.tab td.hi { font-weight: 600; }
+  table.tab td.note { white-space: normal; color: var(--muted); font-size: 12.5px; }
+
+  /* charts */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 10px; font-size: 13px; color: var(--text); }
+  .legend .it { display: inline-flex; align-items: center; gap: 7px; cursor: default; transition: opacity .12s; }
+  .legend svg { display: block; }
+  .plot { position: relative; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  .plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .plot text { font-family: var(--body); fill: var(--muted); font-size: 12.5px; }
+  .plot text.dark { fill: var(--text); }
+  .plot text.title { fill: var(--text); font: 600 14px var(--display); }
+  .plot text.note { font-size: 11.5px; }
+  .plot text.anno { fill: var(--text); font-size: 12.5px; font-weight: 500; }
+  .plot .base { stroke: #c3ccd8; stroke-width: 1; }
+  .plot .grid { stroke: var(--rule); stroke-width: 1; }
+  .plot .ln { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .plot .pt { stroke: var(--panel); stroke-width: 1.4; }
+  .plot .hitl { fill: none; stroke: transparent; stroke-width: 12; pointer-events: stroke; }
+  .plot .hitc { fill: transparent; stroke: none; }
+  .wrap [data-k] { transition: opacity .12s; }
+  .wrap.hot [data-k]:not(.on) { opacity: .15; }
+  .plot .readout { font-weight: 600; font-size: 12.5px; fill: var(--text); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+  @media (max-width: 640px) { .plot:not(.narrow):not(.small) svg { min-width: 620px; } }
+  .multiples { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 12px; }
+  @media (max-width: 760px) { .multiples { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  table.heatmap { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.5; font-variant-numeric: tabular-nums;
+                  border-top: 1.5px solid var(--text); border-bottom: 1.5px solid var(--text); }
+  .heatmap th, .heatmap td { padding: 0; text-align: center; white-space: nowrap; }
+  .heatmap th { padding: 7px 8px; font-weight: 400; transition: background .1s; }
+  .heatmap thead th { font-weight: 600; border-bottom: 1px solid var(--text); }
+  .heatmap tbody th { text-align: left; }
+  .heatmap .tile { padding: 9px 8px; }
+  .heatmap td { border: 2px solid var(--panel); }
+  .heatmap td.on .tile { box-shadow: inset 0 0 0 2px #0f172a, inset 0 0 0 3.5px #ffffff; }
+  .heatmap th.on { background: var(--box); }
+  .heatmap .spark { width: 84px; padding: 2px 6px; border: 0; }
+  .heatmap .spark svg { display: block; margin: 0 auto; overflow: visible; }
+  .heat-key { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 12px; font-size: 12.5px; color: var(--muted); }
+  .heat-key .ramp { display: inline-block; width: 180px; height: 12px; border-radius: 3px; vertical-align: middle; box-shadow: inset 0 0 0 1px rgba(15,23,42,.1); }
+  @media (max-width: 560px) { .heatmap th { padding: 7px 5px; } .heatmap .tile { padding: 9px 5px; } }
+
+  .eq { display: flex; align-items: center; gap: 12px; margin: .2em 0 1.2em; overflow-x: auto; }
+  .eq .math { flex: 1; min-width: 0; text-align: center; font-size: 1.05em; }
+  .eqno { color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+  math { font-size: 1.04em; }
+
+  .cite { position: relative; }
+  .cite > a { text-decoration: none; border-bottom: 1px dotted var(--rule-strong); }
+  .cite > a:hover { border-bottom-color: var(--accent); }
+  .cite-card { display: none; position: absolute; left: 0; bottom: 1.7em; z-index: 10; width: 380px; max-width: 78vw; padding: 10px 14px;
+               background: var(--panel); color: var(--text); border: 1px solid var(--rule); border-radius: 10px;
+               box-shadow: 0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.10); font-size: 13px; line-height: 1.45; text-align: left; }
+  .cite:hover .cite-card { display: block; }
+  .references { margin-top: 4em; padding-top: 1.4em; border-top: 1px solid var(--rule); font-size: 14px; color: var(--muted); }
+  .references p.bibitem { line-height: 1.5; padding-left: 1.6em; text-indent: -1.6em; margin: 0 0 .6em; }
+  .references p.bibitem a { overflow-wrap: anywhere; }
+  .appendix-start { margin: 4em 0 0; padding-top: 1.4em; border-top: 1px solid var(--rule); }
+  .appendix-start + h2 { margin-top: .5em; }
+
+  @media (max-width: 1040px) {
+    .page { display: block; padding: 24px 18px 72px; }
+    main { max-width: 800px; margin: 0 auto; }
+    .outline { display: none; }
+    .contents-inline { display: block; }
+    header.title { padding-top: 24px; }
+    h1 { font-size: 34px; }
+    .cite-card { left: auto; right: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .wrap [data-k], .legend .it { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <aside class="outline">
+    <p class="label">Contents</p>
+    <nav id="toc"></nav>
+  </aside>
+
+  <main>
+    <header class="title">
+      <p class="label">Q Labs Research · Applications</p>
+      <h1>Hyper-Epoch Training for Data-Constrained Scientific Pretraining</h1>
+      <p class="dek">Pretraining on molecules, genomes and crystal structures is limited by the amount of unique data rather than by compute. We train with one recipe for many passes over a fixed corpus. On SMILES, it reaches the pretraining loss of the best released molecular language models with 13–39× less unique data, and the gain carries over to property prediction.</p>
+      <p class="meta"><span>October 2026</span></p>
+    </header>
+
+    <nav class="contents-inline" id="toc-inline"></nav>
+
+    <section class="tldr" id="tldr">
+      <h2>TL;DR</h2>
+      <ul>
+        <li>In scientific domains, unique data is more limited than compute. New records come from synthesis, sequencing or simulation, and many repeat known structure: in a 98M-molecule SMILES corpus, the share of molecules with a previously unseen ring system falls from 4.5% to 0.2% as the corpus grows.</li>
+        <li>In chemistry, one hyper-epoch recipe (snapshot ensembling, chain distillation and looped depth) reaches the pretraining loss of the best released SMILES models, those of Xu et al., with <strong>13–39× less unique data</strong> at budgets from 5M to 200M unique tokens.</li>
+        <li>Against our own tuned single-pass frontier, the recipe is worth 5.4–6.2× as much unique data at every budget, and tuned plain repetition is worth 2.1–3.0×. The rest of the 13–39× comes from our single-pass baseline being stronger than that of Xu et al.</li>
+        <li>The recipe's multiplier is flat across budgets, while that of plain repetition falls from 3.0× to 2.1× between 5M and 200M unique tokens. Extra seeds change the recipe's multiplier by less than 0.25×.</li>
+        <li>On a pooled score over eight MoleculeNet tasks with scaffold splits, the recipe pretrained on 50M unique tokens scores above our single-pass 3B-token model, and at 100M above the best released 3B-token model of Xu et al.</li>
+        <li>Ensembling accounts for most of the gain. Looping contributes more at larger budgets and distillation at smaller ones.</li>
+      </ul>
+    </section>
+
+    <h2 id="introduction"><span class="num">1</span>Introduction</h2>
+    <p>In scientific modeling, available compute grows faster than the supply of new observations. Each new molecule must be synthesised and characterised, each genome sequenced, and each crystal structure computed with density functional theory. More records also do not always add information: many new SMILES strings recombine parts already present in the corpus (<a href="#data-limit">Section 2</a>). We ask how much more a model can learn from a fixed corpus by training on it for many passes.</p>
+    <p>For web text, <a class="ref" data-ref="muennighoff">Muennighoff et al.</a> found that a few epochs of repeated data are nearly as useful as new data, and that further repeats are worth rapidly less. Our work on protein language models (<a class="ref" data-ref="baron">Baron et al.</a>) showed that a tuned multi-epoch recipe extracts considerably more from repeated data. <a class="ref" data-ref="q0">q0</a> introduced hyper-epoch training, a set of primitives designed for many passes over the same data.</p>
+    <p>This post applies one hyper-epoch recipe, with the same rules, to several data-constrained domains and evaluates each in the same way. Since the recipe does not change between domains, the post is organised by question, and each table and figure has one row or panel per domain. This version reports results for molecular language models trained on SMILES, a string representation of molecular structure; results for eukaryotic DNA and crystal-structure generation will be added as further rows. In chemistry we vary the number of unique tokens from 5M to 200M and compare each repeated-data run with a tuned single-pass frontier measured up to 1.5B tokens. Each result is stated as the amount of unique data a single pass would need to match it.</p>    <p>Our contributions in chemistry:</p>
+    <ul>
+      <li>A measurement of how quickly new structure appears in a 98M-molecule corpus: the rate of new scaffolds and ring systems falls steadily as the corpus grows.</li>
+      <li>Tuned baselines: a single-epoch frontier tuned over model size, learning rate and batch size (1,377 runs), and a tuned multi-epoch arm (3,648 runs).</li>
+      <li>One hyper-epoch recipe with preset rules across budgets that reaches the pretraining loss of the best released checkpoints of Xu et al. with 13–39× less unique data, and is worth 5.4–6.2× unique data against our own single-pass frontier, from 5M to 200M unique tokens.</li>
+      <li>Downstream evidence on eight MoleculeNet tasks with scaffold splits: from 50M unique tokens the recipe fine-tunes better than a single pass over 3B.</li>
+      <li>A leave-one-out ablation of every component, on both pretraining and fine-tuning.</li>
+    </ul>
+
+    <h2 id="data-limit"><span class="num">2</span>Why Pretraining Is Data-Constrained</h2>
+    <p>Training compute can be increased by buying hardware. Scientific data increases only as fast as experiments and simulations produce it, and much of the new data overlaps with existing data. A scientific corpus is therefore limited in two ways: by the number of records and by the amount of new structure each additional record contains. The second limit can apply even when the corpus is large.</p>
+
+    <h3 id="data-limit-molecules"><span class="num">2.1</span>Molecules</h3>
+    <p>PubChem lists about 119 million compounds (<a class="ref" data-ref="pubchem">Kim, S. et al.</a>). Make-on-demand catalogues are larger: Enamine REAL contains more than 80 billion virtual products (<a class="ref" data-ref="enamine">Enamine</a>). These products are enumerated from a fixed set of building blocks and about 170 validated reactions, so the size of the catalogue reflects the number of combinations rather than the amount of new chemistry.</p>
+    <p>We measured how fast new structure appears in the corpus we train on. Streaming its 97.7M deduplicated molecules in training order, we count distinct Bemis–Murcko scaffolds (<a class="ref" data-ref="bemis">Bemis and Murcko</a>), their generic forms (atom and bond types removed) and ring systems, together with the share of molecules that contain a ring system not seen earlier (Table 1). If every molecule brought new structure, the counts would grow in proportion to the corpus. Instead they grow as $N^{0.83}$ for scaffolds, $N^{0.63}$ for generic scaffolds and $N^{0.59}$ for ring systems, and the novel-ring-system rate falls from 4.5% at 100k molecules to 0.2% at 97.7M. Of the molecules added between 30M and 97.7M, 99.8% contain only ring systems that already occur earlier in the corpus. Our budgets of 5M to 200M unique tokens (about 0.1M to 4.5M molecules) lie in the range where the novel-ring-system rate has already fallen from 4.5% to below 1%.</p>
+
+    <figure class="table" id="tab-diversity">
+      <figcaption><span class="fignum">Table 1.</span> New structure as the SMILES training corpus grows, counted in training order. Novel ring-system rate: share of the molecules since the previous row that contain a ring system absent from all earlier molecules. Exponents are least-squares fits of count against $N$ in log-log space.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">molecules $N$</th><th class="r">scaffolds</th><th class="r">generic scaffolds</th><th class="r">ring systems</th><th class="r">novel ring-system rate</th></tr></thead>
+        <tbody>
+          <tr><td class="r">100k</td><td class="r">77.6k</td><td class="r">36.8k</td><td class="r">4.6k</td><td class="r">4.5%</td></tr>
+          <tr><td class="r">300k</td><td class="r">213k</td><td class="r">83.4k</td><td class="r">8.1k</td><td class="r">1.7%</td></tr>
+          <tr><td class="r">1M</td><td class="r">620k</td><td class="r">194k</td><td class="r">15.4k</td><td class="r">1.0%</td></tr>
+          <tr><td class="r">3M</td><td class="r">1.58M</td><td class="r">398k</td><td class="r">29.1k</td><td class="r">0.68%</td></tr>
+          <tr><td class="r">10M</td><td class="r">4.21M</td><td class="r">832k</td><td class="r">61.2k</td><td class="r">0.45%</td></tr>
+          <tr><td class="r">30M</td><td class="r">9.78M</td><td class="r">1.54M</td><td class="r">123k</td><td class="r">0.31%</td></tr>
+          <tr><td class="r">97.7M</td><td class="r">22.7M</td><td class="r">2.81M</td><td class="r">260k</td><td class="r">0.20%</td></tr>
+          <tr><td class="r">growth exponent</td><td class="r hi">0.83</td><td class="r hi">0.63</td><td class="r hi">0.59</td><td class="r">—</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <p>Labelled data is smaller still. The eight property-prediction tasks we fine-tune on (<a href="#finetuning">Section 7</a>) have between 642 molecules (FreeSolv) and 7,831 (Tox21), because each label requires a measurement. Performance on these tasks therefore depends heavily on what the model learns in pretraining.</p>
+
+    <h3 id="data-limit-other"><span class="num">2.2</span>Genomes and Crystal Structures</h3>
+    <p>The same two limits apply to the other domains. Genomic diversity is limited by the species that have been sequenced, and eukaryotic genomes contain many repeated sequences. Open crystal-structure databases consist of density-functional-theory calculations, each of which is computationally expensive, and the largest contain a few million structures. <a href="#appendix-a">Appendix A</a> describes each corpus.</p>
+
+    <h2 id="measuring"><span class="num">3</span>Measuring Data Efficiency</h2>
+    <p>We measure every training method in units of unique data. Let $L_s(U)$ be the best validation loss that a single pass over $U$ unique tokens reaches, tuned over model size, learning rate and batch size. For a method that reaches loss $L(U)$ from the same $U$ tokens, the data multiplier is</p>
+    <div class="eq"><div class="math">$$m(U) = \frac{L_s^{-1}\big(L(U)\big)}{U},$$</div><span class="eqno">(1)</span></div>
+    <p>the unique data a single pass would need to match the method, relative to $U$. We invert the frontier by log-linear interpolation between measured budgets (5M to 1.5B in chemistry). A multiplier of 6× at 50M means that the method trained on 50M unique tokens matches a single pass over 300M.</p>
+    <p>Every domain uses the same three references, each tuned on that domain's own data:</p>
+    <ul>
+      <li><span class="runin">Single-epoch frontier.</span> One pass over $U$ with a cosine schedule, best over model size, learning rate and batch size at each budget. It defines $L_s$ in Eq. 1.</li>
+      <li><span class="runin">Tuned multi-epoch.</span> Plain repetition of the same $U$ tokens, tuned over model size, learning rate, weight decay, number of passes and batch size. It is the standard way to use repeated data.</li>
+      <li><span class="runin">Released models.</span> Where a domain has published checkpoints trained on more data, we score them on our validation set and read off how many of their training tokens the recipe matches, interpolating log-linearly between their checkpoints (<a href="#xu">Section 8</a>).</li>
+    </ul>
+    <p>All multipliers measure <strong>unique-data efficiency</strong>, not compute efficiency. The recipe makes 128 passes over its data (6.4B token presentations at 50M unique tokens in chemistry). Looped depth increases computation per token, and pretraining evaluation averages 64 snapshots. The experiments do not establish a compute-matched advantage.</p>
+
+    <h2 id="recipe"><span class="num">4</span>The Recipe</h2>
+    <p>The recipe combines three primitives from <a class="ref" data-ref="q0">q0</a> and <a class="ref" data-ref="chen">Chen et al.</a>, described below.</p>
+    <p><span class="runin">Snapshot ensembling.</span> Training is split into cycles. Within each cycle the learning rate anneals linearly from its peak to $0.08\times$, while weight decay ramps from $0.7\times$ to $1\times$ in anti-phase. The weights at the end of each cycle are kept as a snapshot, and the final model averages the next-token probabilities of all $K$ snapshots:</p>
+    <div class="eq"><div class="math">$$p_{\text{ens}}(x_t \mid x_{&lt;t}) = \frac{1}{K}\sum_{k=1}^{K} p_{\theta_k}(x_t \mid x_{&lt;t}).$$</div><span class="eqno">(2)</span></div>
+    <p><span class="runin">Chain distillation.</span> From the ninth cycle on, each cycle learns from the previous snapshot as well as from the data:</p>
+    <div class="eq"><div class="math">$$\mathcal{L} = (1-\alpha)\,\mathrm{CE} + \alpha\,T^2\,\mathrm{KL}\big(p^{(T)}_{\theta_{k-1}} \,\big\|\, p^{(T)}_{\theta}\big), \qquad \alpha = 0.45,\; T = 1.2.$$</div><span class="eqno">(3)</span></div>
+    <p>After each snapshot the weights are perturbed per tensor, $\theta \leftarrow \theta + \sigma\,\mathrm{std}(\theta)\,z$ with $z \sim \mathcal{N}(0, I)$ and $\sigma$ decaying from 0.25 to 0.05, so consecutive snapshots start from different points.</p>
+    <p><span class="runin">Looped depth.</span> One prelude block, ten core blocks applied three times with tied weights, and one coda block. Each loop boundary applies the boundary operator of <a class="ref" data-ref="chen">Chen et al.</a>: the state is RMS-normalised and a learned projection of the prelude output is re-injected. The model stores 85M parameters and executes 227M per token.</p>
+
+    <h3 id="mixtures"><span class="num">4.1</span>Mixing Snapshots Across Runs</h3>
+    <p>Snapshots from one run are highly correlated, so adding more of them to the ensemble gives diminishing returns (<a href="#ensembles">Section 6.1</a>). Runs with different seeds or components are less correlated. The last step of the recipe pools the snapshots of every recipe run at a budget (the full recipe and its three ablations, all seeds) and combines their next-token probabilities with weights that adapt within each sequence:</p>
+    <div class="eq"><div class="math">$$w_{t+1} = (1-\alpha)\,\frac{w_t \odot p_t^{\beta}}{\lVert w_t \odot p_t^{\beta} \rVert_1} + \alpha\,\pi_{b(t)}, \qquad p_{\text{mix}}(x_t \mid x_{&lt;t}) = \sum_m w_{t,m}\, p_m(x_t \mid x_{&lt;t}),$$</div><span class="eqno">(4)</span></div>
+    <p>where $p_t$ holds each member's probability of the token just seen and $\pi_{b(t)}$ are weights fit by EM for each band of positions in the sequence. After each token, the weights of members that assigned it high probability increase, and the weights are then moved partly back toward the prior. The rule only uses earlier tokens of the same sequence, so the mixture is still a left-to-right model. The weights are never fit on the data they are scored on: the priors and $(\alpha, \beta)$ are fit on one half of the validation sequences and scored on the other half, then the other way round, and the two scores are averaged.</p>
+
+    <h3 id="one-recipe"><span class="num">4.2</span>Settings Across Budgets</h3>
+    <p>We use one preset rule set rather than running a separate search for each budget. In chemistry every run trains an 85M model (12 layers, width 768) for exactly 128 passes over $U$, split into 64 cycles of two passes. Learning rate, batch size and weight decay follow preset scaling rules as $U$ changes; their exact values are in <a href="#appendix-a">Appendix A</a>.</p>
+
+    <h2 id="results"><span class="num">5</span>Pretraining Data Multipliers</h2>
+    <p>We cut each budget $U$ from the start of a large training corpus, so the single-epoch frontier can be measured well beyond the largest budget. In chemistry the corpus is the SMILES collection of <a class="ref" data-ref="xu">Xu et al.</a>, the budgets run from 5M to 200M unique tokens, and the frontier is measured to 1.5B; data, tokenisation, validation set and models are described in <a href="#appendix-a">Appendix A</a>.</p>
+    <p>The hyper-epoch recipe is worth 5.4–6.2× as much unique data at every budget (Figure 1), about twice the tuned multi-epoch arm (2.1–3.0×). Trained on 200M unique tokens it reaches 0.5676, which a single pass needs about 1.2B tokens to match. Unlike tuned multi-epoch training, its multiplier does not decline with $U$. Extra seeds move it by at most 0.11× at 5–50M and 0.25× at 100–200M, far less than the gaps between arms.</p>
+
+    <figure id="fig-loss">
+      <div class="panel wrap" data-fig="loss"></div>
+      <figcaption><span class="fignum">Figure 1.</span> Validation loss against unique pretraining tokens. The single-epoch frontier is the best run over model size, learning rate and batch size at each budget. Stars are the best released checkpoint of Xu et al. at each pretraining size, scored on our validation set. Small markers are extra seeds. Hover for values.</figcaption>
+    </figure>
+
+    <figure class="table" id="tab-pretrain">
+      <figcaption><span class="fignum">Table 2.</span> Pretraining results, seed 0. Validation loss in nats per token, with the data multiplier in parentheses. The single-epoch frontier continues to 0.5751 at 400M, 0.5694 at 800M and 0.5665 at 1.5B.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">single-epoch</th><th class="r">tuned multi-epoch</th><th class="r">hyper-epoch</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">0.7197</td><td class="r">3.00×</td><td class="r hi">0.6295 (5.68×)</td></tr>
+          <tr><td class="r">10M</td><td class="r">0.6745</td><td class="r">2.85×</td><td class="r hi">0.6086 (5.45×)</td></tr>
+          <tr><td class="r">20M</td><td class="r">0.6412</td><td class="r">2.63×</td><td class="r hi">0.5935 (5.44×)</td></tr>
+          <tr><td class="r">50M</td><td class="r">0.6106</td><td class="r">2.67×</td><td class="r hi">0.5799 (5.40×)</td></tr>
+          <tr><td class="r">100M</td><td class="r">0.5949</td><td class="r">2.48×</td><td class="r hi">0.5715 (6.20×)</td></tr>
+          <tr><td class="r">150M</td><td class="r">—</td><td class="r">2.30×</td><td class="r hi">0.5689 (5.95×)</td></tr>
+          <tr><td class="r">200M</td><td class="r">0.5835</td><td class="r">2.08×</td><td class="r hi">0.5676 (5.85×)</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <!--MIX-RESULTS-->
+
+<h2 id="analysis"><span class="num">6</span>Component Contributions</h2>
+
+    <h3 id="ensembles"><span class="num">6.1</span>Ensemble Size</h3>
+    <p>The best single snapshot of a hyper-epoch run is worth 3.2–4.1×, already above tuned repetition. Averaging snapshots takes it to 5.4–6.2× (Figure 2). The two diverge with budget: the best single snapshot falls from 4.0× at 5M to 3.2× at 200M, while the full ensemble stays flat. At small budgets 16 snapshots recover almost all of the gain; at 150M and 200M the curve is still rising at 32–64, so larger budgets benefit from more snapshots.</p>
+
+    <figure id="fig-ens">
+      <div class="panel wrap" data-fig="ens"></div>
+      <figcaption><span class="fignum">Figure 2.</span> Data multiplier against the number of snapshots averaged, one line per budget. $k$ snapshots are equally spaced and end at the last one, so $k = 1$ is the final weights. Darker lines are larger budgets.</figcaption>
+    </figure>
+
+    <h3 id="components"><span class="num">6.2</span>Leave-One-Out Ablations</h3>
+    <p>At every budget we train the full recipe and three variants with everything else fixed: without distillation, without looping, and without both (cycles only). The run without ensembling is the best single snapshot of the full run. Cycles alone are worth 4.3–5.0×, still well above tuned repetition (Figure 3). Looping adds 0.3–1.3× and grows with budget: removing it costs 0.45× at 5M and 1.33× at 200M. Distillation adds 0.4–0.6× at $U \le 50$M and 0.04–0.17× from 100M on.</p>
+
+    <figure id="fig-heat">
+      <div class="panel wrap" data-fig="heat"></div>
+      <figcaption><span class="fignum">Figure 3.</span> Pretraining data multiplier of every arm at every budget. The sparkline shows each row across budgets. Hover a cell to compare.</figcaption>
+    </figure>
+
+    <p>Fine-tuning shows the same pattern with more noise (Figure 4). Removing ensembling hurts at every budget. Removing looping is neutral below 50M and clearly harmful from 100M on. Removing distillation costs little at 20–50M and more at the extremes. No component can be dropped across the whole range without a measurable loss, although at $U \le 20$M the run without looping fine-tunes as well as the full recipe.</p>
+
+    <figure id="fig-paired">
+      <div class="panel wrap" data-fig="paired"></div>
+      <figcaption><span class="fignum">Figure 4.</span> Full recipe against each leave-one-out arm on fine-tuning: paired $z$ over the ten scaffold splits, averaged over the eight tasks. Blue means the full recipe is better.</figcaption>
+    </figure>
+
+    <!--MIX-COMPONENTS-->
+
+<h2 id="finetuning"><span class="num">7</span>Property Prediction</h2>
+
+    <h3 id="protocol"><span class="num">7.1</span>Protocol</h3>
+    <p>We test whether lower pretraining loss leads to better property prediction. We fine-tune on eight MoleculeNet tasks (<a class="ref" data-ref="moleculenet">Wu et al.</a>) used by Xu et al.: BACE, BBBP, ClinTox, SIDER and Tox21 (ROC-AUC) and ESOL, FreeSolv and Lipophilicity (RMSE). HIV is left out for cost. We use ten scaffold splits (80/10/10) rather than random splits, which saturate and would hide differences between models.</p>
+    <p>The pretrained network is frozen and we train rank-8 LoRA adapters (<a class="ref" data-ref="lora">Hu et al.</a>) on the attention query and value projections plus a two-layer head, with batch 64, weight decay 0.01, EMA weights and early stopping; the learning rate is chosen per task on validation. Test-time averaging is equal across arms: every reported model averages 16 sets of predictions, from 16 snapshots for an ensemble and from 16 fine-tuning seeds for a single checkpoint.</p>
+    <p>To summarise eight tasks in one number, we fit each task's single-epoch score log-linearly in $U$ and pool the tasks with inverse-variance weights. The pooled score is in units of $\ln U$ on the single-epoch curve, so one unit is a factor of $e$ in data. Individual task scores are reported in <a href="#appendix-c">Appendix C</a>.</p>
+
+    <h3 id="finetuning-results"><span class="num">7.2</span>Results</h3>
+    <p>The pretraining gain is still present after fine-tuning (Figure 5). At 50M unique pretraining tokens, the hyper-epoch model scores +7.69 on the pooled measure, above our single-epoch 3B model at +7.35. At 100M it reaches +8.27, above the best released Xu et al. 3B-token checkpoint at +7.97. At 200M it reaches +8.61. The corresponding fine-tuning data multipliers are shown in <a href="#fig-ftmult-appendix">Appendix B</a>; the direct score comparison is easier to interpret because the single-epoch downstream curve is relatively flat.</p>
+
+    <figure id="fig-ftpooled">
+      <div class="panel wrap" data-fig="ftpooled"></div>
+      <figcaption><span class="fignum">Figure 5.</span> Pooled fine-tuning score over eight tasks (LoRA, ten scaffold splits, 16 averaged predictions per model) against pretraining tokens. The shaded band is above a single pass over 3B tokens. Stars are the released checkpoints of Xu et al., fine-tuned with the same protocol.</figcaption>
+    </figure>
+
+
+
+    <p>The pooled result is supported by individual tasks: the recipe beats our single-epoch 3B model on four of eight tasks at 50M unique tokens and seven of eight at 200M. The full breakdown, including the comparison with the released Xu et al. checkpoint, is in <a href="#appendix-c">Appendix C</a>.</p>
+
+
+
+<h2 id="xu"><span class="num">8</span>Comparison with Released Models</h2>
+    <p>We scored the released checkpoints of Xu et al. (one pass over 100M, 300M, 1B and 3B tokens, best model size at each) on our validation set and fine-tuned them with the same 16-seed protocol. Comparing them with the hyper-epoch recipe mixes two differences, which we report separately (Figure 6).</p>
+    <p><span class="runin">Effect 1: our single pass against theirs.</span> Both are single-epoch models, so this isolates the training setup. In pretraining loss our frontier is better at every size: it matches their 100M, 300M, 1B and 3B models with about 35M, 70M, 210M and 490M tokens. In fine-tuning the order reverses at equal data: their 3B model scores +7.97, our single pass over 3B +7.35. Their training code applies dropout 0.1 during pretraining and ours does not; dropout would raise single-pass loss while possibly helping transfer. We have not yet tested which difference accounts for the gap.</p>
+    <p><span class="runin">Effect 2: hyper-epoch training against our single pass.</span> This is the subject of the post and is measured entirely against our own frontier. The recipe reaches the loss of their 3B model (0.5735) at about 85M unique tokens, 5.7× less than our single pass needs. On fine-tuning, where Effect 1 goes the other way, the recipe still scores above their 3B model from 100M unique tokens.</p>
+
+    <figure id="fig-xu">
+      <div class="panel wrap" data-fig="xu"></div>
+      <figcaption><span class="fignum">Figure 6.</span> Tokens needed to reach the pretraining loss of the best released 3B-token model of Xu et al. (0.5735). Only the second step measures the value of repetition.</figcaption>
+    </figure>
+
+    <p><span class="runin">Both effects together.</span> For each budget we read off how many tokens a single pass of Xu et al. needs to reach the recipe's pretraining loss, interpolating log-linearly in tokens between their best checkpoints at 100M, 300M, 1B and 3B (Table 3). Trained on 10M–50M unique tokens, the recipe matches their 160M-token to 1.4B-token models, 16–28× more data. From 100M unique tokens on, its loss is lower than that of their best 3B-token model; extending their last segment puts the equivalent at 3.9B–6.2B tokens, 31–39× the data. Across the whole range the recipe needs 13–39× less unique data than the best released models.</p>
+
+    <figure class="table" id="tab-xu">
+      <figcaption><span class="fignum">Table 3.</span> Tokens a single pass of Xu et al. needs to reach the recipe's pretraining loss, and the ratio to the recipe's unique tokens. Values marked * lie outside their 100M–3B checkpoints and extend the nearest segment of their loss curve.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">hyper-epoch loss</th><th class="r">Xu et al. tokens to match</th><th class="r">data multiplier</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">0.6295</td><td class="r">63M*</td><td class="r hi">13×*</td></tr>
+          <tr><td class="r">10M</td><td class="r">0.6086</td><td class="r">159M</td><td class="r hi">16×</td></tr>
+          <tr><td class="r">20M</td><td class="r">0.5935</td><td class="r">319M</td><td class="r hi">16×</td></tr>
+          <tr><td class="r">50M</td><td class="r">0.5799</td><td class="r">1.38B</td><td class="r hi">28×</td></tr>
+          <tr><td class="r">100M</td><td class="r">0.5715</td><td class="r">3.85B*</td><td class="r hi">39×*</td></tr>
+          <tr><td class="r">150M</td><td class="r">0.5689</td><td class="r">5.30B*</td><td class="r hi">35×*</td></tr>
+          <tr><td class="r">200M</td><td class="r">0.5676</td><td class="r">6.16B*</td><td class="r hi">31×*</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+
+
+<h2 id="conclusion"><span class="num">9</span>Conclusion and Open Questions</h2>
+    <p>In the SMILES corpus we measured, new structure becomes rare long before the supply of molecules is exhausted. With a fixed SMILES corpus, plain repetition is worth two to three times the unique data. One shared hyper-epoch recipe of ensembling, chain distillation and looping is worth five to six times, at every budget from 5M to 200M unique tokens, and reaches the pretraining loss of the best released SMILES models with 13–39× less unique data. The benefit transfers to property prediction: trained on 50M unique tokens the recipe fine-tunes better than a single pass over 3B, and at 100M it beats the best released 3B-token model. Each component contributes over part of the range, and ensembling contributes everywhere.</p>
+    <p>Three questions remain open. First, does the multiplier keep holding above 200M unique tokens, where the single-epoch frontier itself becomes capacity-limited? Second, why does looping help more as data grows? <a class="ref" data-ref="chen">Chen et al.</a> find that in multi-epoch training looping acts as a regulariser and that it becomes compute-optimal to add loops as models grow, which suggests the loop count should scale with the budget too. Third, does the recipe hold for continuous prediction objectives? Every domain in this post is trained by next-token prediction over a discrete vocabulary, and each component relies on that: snapshot ensembling and the mixture average categorical next-token distributions, and chain distillation matches them with a KL divergence. Objectives such as regressing atomic coordinates, energies or forces, or training diffusion and flow-matching models, have no categorical output to average, so each component would need a counterpart for continuous outputs. We have not tested whether the multipliers carry over to that setting.</p>
+
+    <h2 id="related-work"><span class="num">10</span>Related Work</h2>
+    <p><span class="runin">Data-constrained training.</span> <a class="ref" data-ref="muennighoff">Muennighoff et al.</a> fit scaling laws for repeated data and found that the value of repeats decays after a few epochs. <a class="ref" data-ref="baron">Baron et al.</a> showed that dense models with Muon and strong weight decay substantially improve multi-epoch training for proteins, and named snapshot ensembling and chain distillation as next steps, which this work takes up. For web text, <a class="ref" data-ref="kim">Kim, K. et al.</a> show that with ample compute, much stronger regularisation, ensembling and distillation reach the same loss with 5.17× less data at 200M tokens.</p>
+    <p><span class="runin">Hyper-epoch primitives.</span> Snapshot ensembles (<a class="ref" data-ref="huang">Huang et al.</a>) reuse a cyclic schedule (<a class="ref" data-ref="sgdr">Loshchilov and Hutter</a>) to collect many models from one run. <a class="ref" data-ref="hinton">Hinton et al.</a> and <a class="ref" data-ref="ban">Furlanello et al.</a> studied distilling a model into a fresh copy of itself. <a class="ref" data-ref="q0">q0</a> combines these into primitives for hyper-epoch pretraining.</p>
+    <p><span class="runin">Looped transformers.</span> Weight-tied depth dates to the Universal Transformer (<a class="ref" data-ref="ut">Dehghani et al.</a>). <a class="ref" data-ref="chen">Chen et al.</a> introduce the boundary operator we use and show that recursion and model growth change pretraining scaling exponents.</p>
+    <p><span class="runin">Chemical data and diversity.</span> PubChem (<a class="ref" data-ref="pubchem">Kim, S. et al.</a>) is the largest open database of known compounds, and make-on-demand spaces such as Enamine REAL (<a class="ref" data-ref="enamine">Enamine</a>) enumerate many more from a fixed set of building blocks and reactions. Bemis–Murcko scaffolds (<a class="ref" data-ref="bemis">Bemis and Murcko</a>) are the standard way to group molecules by framework and underlie the scaffold splits we use.</p>
+    <p><span class="runin">Chemical language models.</span> <a class="ref" data-ref="xu">Xu et al.</a> study scaling of SMILES language models and release the checkpoints we compare against. MoleculeNet (<a class="ref" data-ref="moleculenet">Wu et al.</a>) provides the downstream tasks.</p>
+
+    <section class="references" id="references">
+      <h2>References</h2>
+      <p class="bibitem" id="ref-baron">Baron, E., Vegesna, A., Dahal, S., and Wilson, A. G. Data-constrained training of protein language models. Q Labs and New York University, 2026.</p>
+      <p class="bibitem" id="ref-bemis">Bemis, G. W. and Murcko, M. A. The properties of known drugs. 1. Molecular frameworks. Journal of Medicinal Chemistry, 1996.</p>
+      <p class="bibitem" id="ref-chen">Chen, Z., Vegesna, A., Dahal, S., and Wilson, A. G. How model growth, recursion, and boundary operators influence scaling exponents. arXiv:2609.19107, 2026. <a href="https://arxiv.org/abs/2609.19107" target="_blank" rel="noopener">arxiv.org/abs/2609.19107</a></p>
+      <p class="bibitem" id="ref-ut">Dehghani, M., Gouws, S., Vinyals, O., Uszkoreit, J., and Kaiser, Ł. Universal transformers. ICLR, 2019.</p>
+      <p class="bibitem" id="ref-enamine">Enamine. REAL Space: make-on-demand chemical space. 2025. <a href="https://enamine.net/compound-collections/real-compounds/real-space-navigator" target="_blank" rel="noopener">enamine.net</a></p>
+      <p class="bibitem" id="ref-ban">Furlanello, T., Lipton, Z., Tschannen, M., Itti, L., and Anandkumar, A. Born-again neural networks. ICML, 2018.</p>
+      <p class="bibitem" id="ref-hinton">Hinton, G., Vinyals, O., and Dean, J. Distilling the knowledge in a neural network. arXiv:1503.02531, 2015.</p>
+      <p class="bibitem" id="ref-lora">Hu, E. J., Shen, Y., Wallis, P., et al. LoRA: Low-rank adaptation of large language models. ICLR, 2022.</p>
+      <p class="bibitem" id="ref-huang">Huang, G., Li, Y., Pleiss, G., Liu, Z., Hopcroft, J. E., and Weinberger, K. Q. Snapshot ensembles: Train 1, get M for free. ICLR, 2017.</p>
+      <p class="bibitem" id="ref-kim">Kim, K., Kotha, S., Liang, P., and Hashimoto, T. Pre-training under infinite compute. arXiv:2509.14786, 2025. <a href="https://arxiv.org/abs/2509.14786" target="_blank" rel="noopener">arxiv.org/abs/2509.14786</a></p>
+      <p class="bibitem" id="ref-pubchem">Kim, S., Chen, J., Cheng, T., et al. PubChem 2025 update. Nucleic Acids Research, 2025.</p>
+      <p class="bibitem" id="ref-sgdr">Loshchilov, I. and Hutter, F. SGDR: Stochastic gradient descent with warm restarts. ICLR, 2017.</p>
+      <p class="bibitem" id="ref-q0">Mandal, B., Berman, S., Vegesna, A., and Dahal, S. q0: Primitives for hyper-epoch pretraining. arXiv:2606.03938, 2026. <a href="https://arxiv.org/abs/2606.03938" target="_blank" rel="noopener">arxiv.org/abs/2606.03938</a></p>
+      <p class="bibitem" id="ref-muennighoff">Muennighoff, N., Rush, A. M., Barak, B., et al. Scaling data-constrained language models. NeurIPS, 2023.</p>
+      <p class="bibitem" id="ref-moleculenet">Wu, Z., Ramsundar, B., Feinberg, E. N., et al. MoleculeNet: A benchmark for molecular machine learning. Chemical Science, 2018.</p>
+      <p class="bibitem" id="ref-xu">Xu, D., Pan, Q., Yuan, S., Li, J., Zhu, Z., and Ji, J. Unveiling scaling behaviors in molecular language models: Effects of model size, data, and representation. arXiv:2601.22757, 2026. <a href="https://arxiv.org/abs/2601.22757" target="_blank" rel="noopener">arxiv.org/abs/2601.22757</a></p>
+    </section>
+
+    <p class="appendix-start" id="appendix">Appendix</p>
+    <h2 id="appendix-a"><span class="num">A</span>Domain Details</h2>
+    <p><span class="runin">Chemistry (SMILES).</span></p>
+    <p>We pretrain on the SMILES corpora of <a class="ref" data-ref="xu">Xu et al.</a> with their 591-token vocabulary. Every run is scored on the same held-out set, the first 2M tokens of the SMILES-100M validation split, by next-token cross-entropy in nats per token. Whole molecules are packed into 8,192-token rows with a block-diagonal attention mask, so the unique-token count $U$ is exact. Models are pre-LN decoder-only transformers with rotary embeddings and no dropout, on the width and depth ladder of Xu et al. (1.3M to 278M non-embedding parameters). All runs use Muon for matrix parameters and AdamW for embeddings and the output head, with no warmup.</p>
+    <p>The two tuned reference arms in chemistry:</p>
+    <ul>
+      <li><span class="runin">Single-epoch frontier.</span> One pass over $U \in \{5, 10, 20, 50, 100, 200, 400, 800, 1500\}$M tokens with a cosine schedule and no weight decay, tuned over model size, learning rate and batch size (16k to 262k tokens). A single pass over 3B tokens with the 278M model reaches 0.568, worse than 1.5B (0.5665): the ladder is capacity-limited there, so the 3B run serves as a fine-tuning reference but not as a frontier point.</li>
+      <li><span class="runin">Tuned multi-epoch.</span> Repeated passes over $U \in \{5, \dots, 200\}$M at a constant learning rate, re-packing every pass and stopping early, tuned over model size, learning rate, weight decay, number of passes and batch size.</li>
+    </ul>
+    <figure class="table">
+      <figcaption><span class="fignum">Table A1.</span> Model ladder, same shapes as Xu et al. The hyper-epoch recipe uses the 85M model.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="l">model</th><th class="r">layers</th><th class="r">width</th><th class="r">non-embedding parameters</th></tr></thead>
+        <tbody>
+          <tr><td class="l">1M</td><td class="r">4</td><td class="r">160</td><td class="r">1.3M</td></tr>
+          <tr><td class="l">4M</td><td class="r">5</td><td class="r">256</td><td class="r">4.1M</td></tr>
+          <tr><td class="l">16M</td><td class="r">5</td><td class="r">512</td><td class="r">16.1M</td></tr>
+          <tr><td class="l">43M</td><td class="r">6</td><td class="r">768</td><td class="r">43.0M</td></tr>
+          <tr><td class="l">85M</td><td class="r">12</td><td class="r">768</td><td class="r">85.5M</td></tr>
+          <tr><td class="l">152M</td><td class="r">12</td><td class="r">1024</td><td class="r">151.8M</td></tr>
+          <tr><td class="l">278M</td><td class="r">22</td><td class="r">1024</td><td class="r">277.7M</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <figure class="table">
+      <figcaption><span class="fignum">Table A2.</span> Hyper-epoch settings per budget: 128 passes, 64 cycles, peak values, AdamW lr 0.002 for embeddings and head. Steps per pass are approximate because rows are re-packed every pass.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">batch (tokens)</th><th class="r">steps per pass</th><th class="r">Muon lr</th><th class="r">weight decay</th><th class="r">lr · wd · steps</th><th class="r">total steps</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">16k</td><td class="r">305</td><td class="r">0.02</td><td class="r">0.2</td><td class="r">1.22</td><td class="r">38k</td></tr>
+          <tr><td class="r">10M</td><td class="r">16k</td><td class="r">610</td><td class="r">0.02</td><td class="r">0.1</td><td class="r">1.22</td><td class="r">77k</td></tr>
+          <tr><td class="r">20M</td><td class="r">16k</td><td class="r">1,221</td><td class="r">0.02</td><td class="r">0.05</td><td class="r">1.22</td><td class="r">153k</td></tr>
+          <tr><td class="r">50M</td><td class="r">65k</td><td class="r">763</td><td class="r">0.02</td><td class="r">0.1</td><td class="r">1.53</td><td class="r">96k</td></tr>
+          <tr><td class="r">100M</td><td class="r">65k</td><td class="r">1,526</td><td class="r">0.01</td><td class="r">0.08</td><td class="r">1.22</td><td class="r">191k</td></tr>
+          <tr><td class="r">150M</td><td class="r">65k</td><td class="r">2,289</td><td class="r">0.01</td><td class="r">0.053</td><td class="r">1.21</td><td class="r">287k</td></tr>
+          <tr><td class="r">200M</td><td class="r">65k</td><td class="r">3,052</td><td class="r">0.01</td><td class="r">0.04</td><td class="r">1.22</td><td class="r">383k</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <h2 id="appendix-b"><span class="num">B</span>Full Results</h2>
+    <figure class="table">
+      <figcaption><span class="fignum">Table B1.</span> Pretraining loss (multiplier) of every hyper-epoch arm, seed 0. Full-recipe multipliers of extra seeds: 5.74 / 5.63 (5M), 5.48 / 5.45 (10M), 5.50 / 5.38 (20M), 5.45 (50M), 5.98 (100M), 5.75 (150M), 5.60 (200M).</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">full</th><th class="r">− ensembling</th><th class="r">− distillation</th><th class="r">− looping</th><th class="r">− dist. − loop</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r hi">0.6295 (5.68×)</td><td class="r">0.6414 (3.98×)</td><td class="r">0.6330 (5.12×)</td><td class="r">0.6322 (5.23×)</td><td class="r">0.6357 (4.72×)</td></tr>
+          <tr><td class="r">10M</td><td class="r hi">0.6086 (5.45×)</td><td class="r">0.6175 (4.06×)</td><td class="r">0.6115 (4.87×)</td><td class="r">0.6109 (4.96×)</td><td class="r">0.6138 (4.54×)</td></tr>
+          <tr><td class="r">20M</td><td class="r hi">0.5935 (5.44×)</td><td class="r">0.6001 (3.98×)</td><td class="r">0.5955 (4.87×)</td><td class="r">0.5950 (4.97×)</td><td class="r">0.5973 (4.49×)</td></tr>
+          <tr><td class="r">50M</td><td class="r hi">0.5799 (5.40×)</td><td class="r">0.5842 (3.84×)</td><td class="r">0.5808 (5.00×)</td><td class="r">0.5813 (4.81×)</td><td class="r">0.5827 (4.27×)</td></tr>
+          <tr><td class="r">100M</td><td class="r hi">0.5715 (6.20×)</td><td class="r">0.5757 (3.82×)</td><td class="r">0.5717 (6.08×)</td><td class="r">0.5729 (5.25×)</td><td class="r">0.5733 (4.97×)</td></tr>
+          <tr><td class="r">150M</td><td class="r hi">0.5689 (5.95×)</td><td class="r">0.5731 (3.42×)</td><td class="r">0.5689 (5.91×)</td><td class="r">0.5700 (4.98×)</td><td class="r">0.5702 (4.81×)</td></tr>
+          <tr><td class="r">200M</td><td class="r hi">0.5676 (5.85×)</td><td class="r">0.5713 (3.19×)</td><td class="r">0.5678 (5.68×)</td><td class="r">0.5688 (4.52×)</td><td class="r">0.5690 (4.35×)</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <figure class="table">
+      <figcaption><span class="fignum">Table B2.</span> Pooled fine-tuning score ($\ln U$ units of the single-epoch curve) with the fine-tuning multiplier in parentheses. "Beats 3B" means the score is above a single pass over 3B, where only the lower bound 3B / $U$ is stated. The single-epoch reference continues: +6.39 (400M), +6.47 (800M), +6.75 (1.5B), +7.35 (3B).</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">single-epoch</th><th class="r">tuned multi-epoch</th><th class="r">full</th><th class="r">− ensembling</th><th class="r">− distillation</th><th class="r">− looping</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">+0.58</td><td class="r">+3.13 (4.1×)</td><td class="r hi">+5.60 (28×)</td><td class="r">+4.22 (6.8×)</td><td class="r">+5.21 (17×)</td><td class="r">+5.46 (24×)</td></tr>
+          <tr><td class="r">10M</td><td class="r">+1.86</td><td class="r">+4.12 (3.3×)</td><td class="r hi">+5.75 (16×)</td><td class="r">+5.03 (5.0×)</td><td class="r">+5.57 (14×)</td><td class="r">+6.13 (27×)</td></tr>
+          <tr><td class="r">20M</td><td class="r">+3.06</td><td class="r">+4.79 (2.2×)</td><td class="r hi">+6.62 (56×)</td><td class="r">+5.89 (9.3×)</td><td class="r">+6.45 (34×)</td><td class="r">+6.70 (68×)</td></tr>
+          <tr><td class="r">50M</td><td class="r">+5.04</td><td class="r">+5.63 (2.9×)</td><td class="r hi">+7.69 (beats 3B)</td><td class="r">+6.67 (25×)</td><td class="r">+7.55 (beats 3B)</td><td class="r">+7.57 (beats 3B)</td></tr>
+          <tr><td class="r">100M</td><td class="r">+5.26</td><td class="r">+5.92 (1.9×)</td><td class="r hi">+8.27 (beats 3B)</td><td class="r">+6.70 (13×)</td><td class="r">+7.79 (beats 3B)</td><td class="r">+7.60 (beats 3B)</td></tr>
+          <tr><td class="r">150M</td><td class="r">—</td><td class="r">+6.32 (2.4×)</td><td class="r hi">+8.48 (beats 3B)</td><td class="r">+7.59 (beats 3B)</td><td class="r">+7.87 (beats 3B)</td><td class="r">+7.26 (18×)</td></tr>
+          <tr><td class="r">200M</td><td class="r">+5.96</td><td class="r">+6.24 (1.6×)</td><td class="r hi">+8.61 (beats 3B)</td><td class="r">+6.99 (10×)</td><td class="r">+8.15 (beats 3B)</td><td class="r">+7.46 (beats 3B)</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <figure id="fig-ftmult-appendix">
+      <div class="panel wrap" data-fig="ftmult"></div>
+      <figcaption><span class="fignum">Figure B1.</span> Fine-tuning data multiplier, read from the pooled score on the single-epoch curve. Open triangles mark models that score above a single pass over 3B, where we report only the lower bound 3B / $U$ and never extrapolate.</figcaption>
+    </figure>
+
+    <h2 id="appendix-c"><span class="num">C</span>Individual Property-Prediction Scores</h2>
+    <p>Each value is the mean over ten scaffold splits with 16 averaged sets of predictions per model. ROC-AUC is higher-is-better; RMSE is lower-is-better. These scores show the task-level variation behind the pooled comparisons in Section 7.</p>
+    <figure id="fig-tasks-appendix">
+      <div class="panel wrap" data-fig="tasks"></div>
+      <figcaption><span class="fignum">Figure C1.</span> Per-task fine-tuning, mean over ten scaffold splits. RMSE axes are flipped so up is better on every panel. "Best single snapshot" is the hyper-epoch run without ensembling.</figcaption>
+    </figure>
+  </main>
+</div>
+
+<script id="chem-data" type="application/json">{"MU":[5,10,20,50,100,150,200],"frontier":{"U":[5,10,20,50,100,200,400,800,1500],"loss":[0.7197,0.6745,0.6412,0.6106,0.5949,0.5835,0.5751,0.5694,0.5665]},"me_mult":[3.0,2.85,2.63,2.67,2.48,2.3,2.08],"me_loss":[0.65502,0.62937,0.60945,0.59015,0.58089,0.57689,0.57478],"pre":{"full":{"loss":[0.62951,0.60863,0.59351,0.57986,0.57149,0.56889,0.56765],"mult":[5.67691,5.45363,5.44214,5.40139,6.20216,5.95216,5.84672],"seeds":[[5,1,0.62915,5.73775],[5,2,0.62978,5.63084],[10,1,0.60853,5.47912],[10,2,0.60865,5.45003],[20,1,0.59334,5.49675],[20,2,0.5937,5.37793],[50,1,0.57975,5.44942],[100,1,0.5718,5.97565],[150,1,0.56906,5.74662],[200,1,0.56785,5.60131]]},"single":{"loss":[0.6414,0.61753,0.60007,0.58417,0.57566,0.57306,0.57127],"mult":[3.98317,4.06317,3.97967,3.8397,3.8202,3.41893,3.18636],"seeds":[[5,1,0.6409,4.03627],[5,2,0.64157,3.9691],[10,1,0.61725,4.09669],[10,2,0.61733,4.08749],[20,1,0.59972,4.04148],[20,2,0.59995,4.001],[50,1,0.58428,3.81587],[100,1,0.57617,3.66079],[150,1,0.57346,3.25424],[200,1,0.57173,3.01259]]},"nodist":{"loss":[0.63298,0.61151,0.59552,0.58081,0.57166,0.56892,0.56779],"mult":[5.11688,4.86563,4.86507,4.9953,6.07808,5.91414,5.67583],"seeds":[[5,1,0.63288,5.13185],[5,2,0.63312,5.09423],[10,1,0.61167,4.84287],[10,2,0.61169,4.83927],[20,1,0.59524,4.92542],[20,2,0.59533,4.90556],[50,1,0.58062,5.07514]]},"noloop":{"loss":[0.63224,0.61089,0.59503,0.58126,0.57287,0.56997,0.56884],"mult":[5.23052,4.9565,4.97065,4.81039,5.24565,4.97563,4.51861],"seeds":[[5,1,0.63208,5.25642],[5,2,0.63267,5.16449],[10,1,0.61083,4.96573],[10,2,0.61067,4.98951],[20,1,0.59497,4.98387],[20,2,0.59495,4.98999],[50,1,0.58142,4.75069],[50,2,0.58129,4.79841]]},"neither":{"loss":[0.63569,0.61381,0.59733,0.5827,0.57332,0.57025,0.56902],"mult":[4.71746,4.54132,4.49103,4.27347,4.96601,4.81017,4.34519],"seeds":[[5,1,0.63604,4.66878],[5,2,0.63616,4.6521],[10,1,0.61403,4.51201],[10,2,0.61441,4.46056],[20,1,0.59702,4.55406],[20,2,0.59727,4.50231],[50,1,0.58279,4.24212]]}},"xu":{"D":[100,300,1000,3000],"loss":[0.61914,0.59409,0.5825,0.57353]},"ens":{"5":{"k":[1,2,4,8,16,32,64],"loss":[0.64271,0.63444,0.63144,0.63044,0.62974,0.62952,0.62951]},"10":{"k":[1,2,4,8,16,32,64],"loss":[0.61789,0.61248,0.6101,0.60919,0.60874,0.60866,0.60863]},"20":{"k":[1,2,4,8,16,32,64],"loss":[0.60074,0.59633,0.59463,0.594,0.59359,0.59348,0.59351]},"50":{"k":[1,2,4,8,16,32,64],"loss":[0.58494,0.5819,0.58058,0.58006,0.57983,0.57982,0.57986]},"100":{"k":[1,2,4,8,16,32,64],"loss":[0.57638,0.57363,0.57247,0.57186,0.57154,0.57151,0.57149]},"150":{"k":[1,2,4,8,16,32,64],"loss":[0.57417,0.5713,0.57001,0.56936,0.56905,0.56893,0.56889]},"200":{"k":[1,2,4,8,16,32,64],"loss":[0.57296,0.57056,0.56909,0.56824,0.56788,0.56773,0.56765]}},"ft_ref":{"U":[5,10,20,50,100,200,400,800,1500,3000],"score":[0.58419,1.85983,3.05873,5.04,5.26408,5.95726,6.39001,6.46666,6.7496,7.34857],"mono":[0.58419,1.85983,3.05873,5.04,5.26408,5.95726,6.39001,6.46666,6.7496,7.34857]},"ft":{"full":[5.60487,5.74647,6.6195,7.68607,8.26608,8.4778,8.61161],"single":[4.21803,5.03003,5.88615,6.67317,6.70016,7.58863,6.99463],"nodist":[5.21339,5.56977,6.44827,7.55442,7.78729,7.87478,8.14553],"noloop":[5.4567,6.134,6.70303,7.57267,7.59731,7.25628,7.46374],"neither":[4.9922,5.55346,6.41435,6.9747,7.2211,7.04111,7.13303],"me":[3.13448,4.11927,4.79363,5.62968,5.9208,6.31961,6.23925]},"ft_xu":[4.6979,6.31516,6.67605,7.96944],"ft_mult":{"full":[[28.12053,false],[16.19893,false],[56.17343,false],[60.0,true],[30.0,true],[20.0,true],[15.0,true]],"single":[[6.83764,false],[4.97701,false],[9.31357,false],[25.31479,false],[13.43956,false],[20.0,true],[9.95882,false]],"nodist":[[17.0978,false],[13.57546,false],[33.87124,false],[60.0,true],[30.0,true],[20.0,true],[15.0,true]],"noloop":[[24.24827,false],[26.54424,false],[67.62805,false],[60.0,true],[30.0,true],[17.97424,false],[15.0,true]],"neither":[[9.78137,false],[13.35585,false],[24.9239,false],[38.92716,false],[25.88562,false],[14.01229,false],[11.68878,false]],"me":[[4.1426,false],[3.26617,false],[2.23078,false],[2.88269,false],[1.92839,false],[2.38232,false],[1.57093,false]]},"tasks":{"lipo":{"g":-1,"ref":[0.78547,0.75393,0.72987,0.69577,0.69011,0.68302,0.67412,0.66842,0.66661,0.65089],"full":[0.6912,0.69497,0.66693,0.6472,0.64177,0.63545,0.63288],"single":[0.71162,0.69859,0.68215,0.6646,0.66985,0.65108,0.66409],"xu":[0.70328,0.66558,0.65805,0.6431]},"tox21":{"g":1,"ref":[0.78556,0.78922,0.79783,0.80674,0.80285,0.81214,0.80993,0.81173,0.80757,0.81184],"full":[0.81318,0.81412,0.81167,0.82174,0.82024,0.82204,0.8222],"single":[0.79735,0.80365,0.80889,0.81523,0.80975,0.81312,0.81372],"xu":[0.80011,0.80532,0.80474,0.81427]},"sider":{"g":1,"ref":[0.60186,0.58923,0.59459,0.61569,0.60833,0.62112,0.63193,0.62083,0.64851,0.6501],"full":[0.619,0.62266,0.62009,0.63388,0.64363,0.64491,0.65147],"single":[0.60769,0.6046,0.60824,0.6221,0.63837,0.64185,0.63769],"xu":[0.6001,0.61783,0.61569,0.64712]},"clintox":{"g":1,"ref":[0.88074,0.85731,0.86836,0.88552,0.90427,0.91835,0.92045,0.9123,0.92155,0.93117],"full":[0.92283,0.92556,0.92438,0.93125,0.9356,0.92984,0.93433],"single":[0.90939,0.92058,0.9378,0.92075,0.92779,0.92961,0.92984],"xu":[0.92289,0.9216,0.92643,0.93841]},"esol":{"g":-1,"ref":[0.98726,0.91209,0.94262,0.87426,0.85476,0.85553,0.84421,0.86284,0.83953,0.85118],"full":[0.89892,0.85359,0.88451,0.88275,0.81171,0.83406,0.82356],"single":[0.9175,0.88623,0.9286,0.86699,0.85106,0.85273,0.87067],"xu":[0.93501,0.86,0.85737,0.83717]},"freesolv":{"g":-1,"ref":[3.00021,2.55968,2.47769,2.28072,2.16768,2.17012,2.18364,2.1603,2.17965,2.33317],"full":[2.25244,2.19683,1.97174,1.95828,1.74597,1.72736,1.84806],"single":[2.40056,2.01441,1.92493,2.10711,1.94357,1.74971,1.91133],"xu":[2.19025,2.4002,2.02187,1.94229]},"bbbp":{"g":1,"ref":[0.90671,0.90876,0.92101,0.92088,0.91952,0.92171,0.92927,0.92728,0.92945,0.93201],"full":[0.91506,0.91977,0.92614,0.92635,0.92329,0.92591,0.92683],"single":[0.91483,0.90867,0.92081,0.91536,0.91587,0.92524,0.91796],"xu":[0.92987,0.93054,0.91972,0.93276]},"bace":{"g":1,"ref":[0.85625,0.85354,0.85738,0.86623,0.86173,0.85978,0.86602,0.87261,0.87088,0.86854],"full":[0.87075,0.87178,0.87153,0.86731,0.87639,0.88023,0.87869],"single":[0.87631,0.86176,0.86495,0.86776,0.87427,0.87344,0.87603],"xu":[0.86686,0.87139,0.86826,0.8731]}},"paired":{"rows":["single","nodist","noloop","neither"],"z":[[2.38392,2.32215,1.36977,2.36839,4.75867,1.6634,2.55761],[1.25975,0.94812,0.20803,0.20923,1.47078,2.09238,1.22236],[0.67559,-0.28389,-0.36484,0.04506,1.25017,3.53586,2.61922],[1.01965,0.87215,0.43639,1.04006,2.09434,2.56093,2.48308]]}}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById('chem-data').textContent);
+  const C = { full: '#2a78d6', single: '#eb6834', nodist: '#1baf7a', noloop: '#eda100', neither: '#e87ba4',
+              xu: '#008300', ref: '#0f172a', me: '#a9b2be', ink: '#0f172a', muted: '#64748b', rule: '#dde3ec' };
+  const LAB = { full: 'Hyper-epoch (full recipe)', single: 'Best single snapshot (− ensembling)', nodist: '− distillation',
+                noloop: '− looping', neither: '− distillation − looping', me: 'Tuned multi-epoch', ref: 'Single-epoch frontier',
+                xu: 'Xu et al., released' };
+  const MU = D.MU;
+  const tok = v => v >= 1000 ? (v / 1000) + 'B' : v + 'M';
+  const f2 = v => v.toFixed(2), f4 = v => v.toFixed(4);
+
+  // single-epoch frontier inversion (Eq. 1), identical to hq_report.pmult
+  const SU = D.frontier.U, SL = D.frontier.loss;
+  const pmult = (Lv, U) => {
+    let i = SU.length - 2;
+    for (let j = 0; j < SU.length - 1; j++) if (SL[j + 1] <= Lv && Lv <= SL[j]) { i = j; break; }
+    if (Lv > SL[0]) i = 0;
+    const f = (SL[i] - Lv) / (SL[i] - SL[i + 1]);
+    return Math.exp(Math.log(SU[i]) + f * Math.log(SU[i + 1] / SU[i])) / U;
+  };
+
+  /* ---------- tiny SVG chart kit ---------- */
+  const scale = (dom, rng, log) => {
+    const f = log ? Math.log : (x => x), a = f(dom[0]), b = f(dom[1]);
+    return v => rng[0] + (f(v) - a) / (b - a) * (rng[1] - rng[0]);
+  };
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const mark = (type, x, y, c, s, hollow, k) => {
+    const fill = hollow ? '#ffffff' : c, st = hollow ? `stroke="${c}" stroke-width="1.6"` : 'class="pt"';
+    const dk = k ? ` data-k="${k}"` : '';
+    if (type === 'square') return `<rect ${st}${dk} x="${x - s * .85}" y="${y - s * .85}" width="${s * 1.7}" height="${s * 1.7}" rx="1.2" fill="${fill}"/>`;
+    if (type === 'tri') { const h = s * 1.25; return `<path ${st}${dk} d="M${x} ${y - h} L${x + h} ${y + h * .75} L${x - h} ${y + h * .75} Z" fill="${fill}"/>`; }
+    if (type === 'diamond') { const h = s * 1.2; return `<path ${st}${dk} d="M${x} ${y - h} L${x + h} ${y} L${x} ${y + h} L${x - h} ${y} Z" fill="${fill}"/>`; }
+    if (type === 'star') {
+      let d = ''; for (let i = 0; i < 10; i++) { const r = i % 2 ? s * .62 : s * 1.55, a = -Math.PI / 2 + i * Math.PI / 5; d += (i ? 'L' : 'M') + (x + r * Math.cos(a)).toFixed(1) + ' ' + (y + r * Math.sin(a)).toFixed(1); }
+      return `<path ${st}${dk} d="${d}Z" fill="${fill}"/>`;
+    }
+    return `<circle ${st}${dk} cx="${x}" cy="${y}" r="${s}" fill="${fill}"/>`;
+  };
+  const swatch = (s) => {
+    const dash = s.dash ? ` stroke-dasharray="${s.dash}"` : '';
+    const line = s.noLine ? '' : `<line x1="1" x2="25" y1="7" y2="7" stroke="${s.color}" stroke-width="${s.width || 2}"${dash} stroke-linecap="round"/>`;
+    return `<svg width="26" height="14" aria-hidden="true">${line}${s.marker === 'none' ? '' : mark(s.marker || 'circle', 13, 7, s.color, s.marker === 'star' ? 4.2 : 3.6, s.hollowLegend)}</svg>`;
+  };
+  const legend = series => '<div class="legend">' + series.filter(s => !s.noLegend).map(s =>
+    `<span class="it" data-k="${s.k}">${swatch(s)}${esc(s.label)}</span>`).join('') + '</div>';
+
+  function plot(o) {
+    const W = o.w || 760, H = o.h || 400, m = Object.assign({ l: 54, r: 24, t: 34, b: 46 }, o.m || {});
+    const X = scale(o.x.dom, [m.l, W - m.r], o.x.log), Y = scale(o.y.dom, [H - m.b, m.t], o.y.log);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}">`;
+    if (o.title) s += `<text class="title" x="6" y="16">${esc(o.title)}</text>`;
+    s += `<text x="6" y="${o.title ? 32 : 16}">${esc(o.y.label)}</text>`;
+    (o.bands || []).forEach(b => { const y1 = Y(b.y1), y0 = Y(b.y0); s += `<rect x="${m.l}" y="${Math.min(y0, y1)}" width="${W - m.r - m.l}" height="${Math.abs(y1 - y0)}" fill="${b.fill}"/>`;
+      if (b.label) s += `<text class="note" x="${W - m.r - 6}" y="${Math.min(y0, y1) + 14}" text-anchor="end">${esc(b.label)}</text>`; });
+    o.y.ticks.forEach(v => { const y = Y(v); s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}"/><text x="${m.l - 8}" y="${y}" dy="0.35em" text-anchor="end">${o.y.fmt ? o.y.fmt(v) : v}</text>`; });
+    s += `<line class="base" x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}"/>`;
+    o.x.ticks.forEach(v => { const x = X(v); s += `<line class="base" x1="${x}" x2="${x}" y1="${H - m.b}" y2="${H - m.b + 4}"/><text x="${x}" y="${H - m.b + 18}" text-anchor="middle">${o.x.fmt ? o.x.fmt(v) : v}</text>`; });
+    if (o.x.label) s += `<text x="${(m.l + W - m.r) / 2}" y="${H - 6}" text-anchor="middle">${esc(o.x.label)}</text>`;
+    (o.hlines || []).forEach(h => { const y = Y(h.y); s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}" stroke="${h.color || '#94a3b8'}" stroke-width="1.2" stroke-dasharray="${h.dash || '0.1 4.5'}" stroke-linecap="round"/>`;
+      if (h.label) s += `<text class="note" x="${h.lx ? X(h.lx) : m.l + 6}" y="${y - 5}">${esc(h.label)}</text>`; });
+    if (o.pre) s += o.pre(X, Y);
+    const hits = [];
+    o.series.forEach(se => {
+      const pts = se.pts.filter(p => p && p[1] != null);
+      if (!se.noLine && pts.length > 1) {
+        const d = pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ');
+        s += `<path class="ln" data-k="${se.k}" d="${d}" stroke="${se.color}" stroke-width="${se.width || 2}"${se.dash ? ` stroke-dasharray="${se.dash}"` : ''}/>`;
+        hits.push(`<path class="hitl" data-k="${se.k}" d="${d}"/>`);
+      }
+      pts.forEach(p => {
+        const x = X(p[0]), y = Y(p[1]), hollow = p[3] && p[3].hollow, sz = (p[3] && p[3].size) || se.size || 3.6;
+        if (se.marker !== 'none') s += mark((p[3] && p[3].marker) || se.marker || 'circle', x, y, se.color, sz, hollow, se.k);
+        const v = (p[2] != null) ? p[2] : '';
+        if (v !== '') hits.push(`<circle class="hitc" data-k="${se.k}" data-v="${esc(v)}" data-x="${x}" data-y="${y - 12}" cx="${x}" cy="${y}" r="9"/>`);
+      });
+    });
+    if (o.post) s += o.post(X, Y);
+    s += hits.join('') + `<text class="readout" visibility="hidden" text-anchor="middle"></text></svg>`;
+    return s;
+  }
+
+  // hover: highlight a series, show the value at a point (pattern of the house template)
+  function wire(root) {
+    const clear = () => { root.classList.remove('hot'); root.querySelectorAll('.on').forEach(n => n.classList.remove('on'));
+      root.querySelectorAll('.readout').forEach(r => r.setAttribute('visibility', 'hidden')); };
+    const show = n => {
+      clear(); root.classList.add('hot');
+      root.querySelectorAll(`[data-k="${n.getAttribute('data-k')}"]`).forEach(m => m.classList.add('on'));
+      if (n.hasAttribute('data-v')) {
+        const svg = n.ownerSVGElement, r = svg.querySelector('.readout'), w = svg.viewBox.baseVal.width;
+        r.textContent = n.getAttribute('data-v');
+        let half = 50; try { half = Math.max(half, r.getComputedTextLength() / 2 + 6); } catch (e) {}
+        r.setAttribute('x', Math.max(half, Math.min(w - half, +n.getAttribute('data-x'))));
+        r.setAttribute('y', n.getAttribute('data-y')); r.setAttribute('visibility', 'visible');
+      }
+    };
+    const hit = ev => { const n = ev.target.closest ? ev.target.closest('[data-k]') : null; return n && root.contains(n) ? n : null; };
+    root.addEventListener('pointerover', ev => { const n = hit(ev); if (n) show(n); });
+    root.addEventListener('pointerleave', clear);
+    root.addEventListener('click', ev => { const n = hit(ev); if (n) show(n); else clear(); });
+  }
+
+  const fig = {};
+  const xTok = { log: true, fmt: tok };
+
+  /* Figure 1: loss vs unique tokens */
+  fig.loss = () => {
+    const front = { k: 'ref', label: LAB.ref, color: C.ref, width: 2, size: 3.2, pts: SU.map((u, i) => [u, SL[i], `${tok(u)} single pass: ${f4(SL[i])}`]) };
+    const me = { k: 'me', label: LAB.me, color: C.me, dash: '6 4.5', width: 1.8, size: 3.2, pts: MU.map((u, i) => [u, D.me_loss[i], `Tuned multi-epoch ${tok(u)}: ${D.me_mult[i].toFixed(2)}×`]) };
+    const full = { k: 'full', label: LAB.full, color: C.full, width: 2.6, size: 4.2, pts: MU.map((u, i) => [u, D.pre.full.loss[i], `Hyper-epoch ${tok(u)}: ${f4(D.pre.full.loss[i])} (${f2(D.pre.full.mult[i])}×)`])
+      .concat(D.pre.full.seeds.map(s => [s[0] * 1.07, s[2], `seed ${s[1]}, ${tok(s[0])}: ${f4(s[2])}`, { size: 2.4 }])) };
+    full.pts.sort((a, b) => a[0] - b[0]);
+    const lineFull = { ...full, pts: full.pts.filter(p => !p[3]), noLegend: true };
+    const seedsFull = { ...full, k: 'full', pts: full.pts.filter(p => p[3]), noLine: true, noLegend: true };
+    const xu = { k: 'xu', label: LAB.xu, color: C.xu, marker: 'star', size: 4.4, dash: '0.1 4.5', width: 1.6, pts: D.xu.D.map((u, i) => [u, D.xu.loss[i], `Xu et al. ${tok(u)}: ${f4(D.xu.loss[i])}`]) };
+    const series = [front, me, { ...full, pts: [] }, xu];
+    return legend(series) + '<div class="plot">' + plot({
+      aria: 'Validation loss against unique pretraining tokens', w: 760, h: 410,
+      x: { ...xTok, dom: [4, 3600], ticks: [5, 10, 20, 50, 100, 200, 500, 1000, 3000], label: 'Unique pretraining tokens U (Xu et al.: tokens seen once)' },
+      y: { dom: [0.555, 0.73], ticks: [0.56, 0.58, 0.60, 0.62, 0.64, 0.66, 0.68, 0.70, 0.72], fmt: v => v.toFixed(2), label: 'Validation loss (nats/token)' },
+      series: [front, me, xu, lineFull, seedsFull],
+      post: (X, Y) => {
+        const y = Y(0.5676), x0 = X(200) + 8, x1 = X(200 * 5.85) - 6;
+        return `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="${C.full}" stroke-width="1.3" stroke-dasharray="4 3"/>` +
+          `<path d="M${x1} ${y} l-7 -4 v8 z" fill="${C.full}"/>` +
+          `<text class="anno" x="${(x0 + x1) / 2}" y="${y + 18}" text-anchor="middle">200M unique ≈ 1.2B seen once</text>`;
+      }
+    }) + '</div>';
+  };
+
+  /* multiplier vs U (not shown in the post) */
+  fig.mult = () => {
+    const full = { k: 'full', label: LAB.full, color: C.full, width: 2.6, size: 4.2, pts: MU.map((u, i) => [u, D.pre.full.mult[i], `Hyper-epoch ${tok(u)}: ${f2(D.pre.full.mult[i])}×`]) };
+    const seeds = { k: 'full', noLine: true, noLegend: true, color: C.full, pts: D.pre.full.seeds.map(s => [s[0] * 1.07, s[3], `seed ${s[1]}, ${tok(s[0])}: ${f2(s[3])}×`, { size: 2.4 }]) };
+    const me = { k: 'me', label: LAB.me, color: C.me, dash: '6 4.5', width: 1.8, size: 3.4, pts: MU.map((u, i) => [u, D.me_mult[i], `Tuned multi-epoch ${tok(u)}: ${f2(D.me_mult[i])}×`]) };
+    return legend([full, me]) + '<div class="plot">' + plot({
+      aria: 'Data multiplier against unique tokens', w: 760, h: 360,
+      x: { ...xTok, dom: [4.2, 240], ticks: MU, label: 'Unique pretraining tokens U' },
+      y: { dom: [0, 7], ticks: [0, 1, 2, 3, 4, 5, 6, 7], fmt: v => v + '×', label: 'Data multiplier' },
+      hlines: [{ y: 1, label: 'single pass (1×)', color: C.ref, lx: 4.4 }],
+      series: [me, full, seeds],
+      post: (X, Y) => `<text class="anno" x="${X(200) + 10}" y="${Y(5.85)}" dy="0.35em">${f2(5.85)}×</text><text class="anno" x="${X(200) + 10}" y="${Y(2.08)}" dy="0.35em">2.08×</text>`
+    }) + '</div>';
+  };
+
+  /* Figure 5: pooled fine-tuning score */
+  fig.ftpooled = () => {
+    const R = D.ft_ref;
+    const ref = { k: 'ref', label: 'Single-epoch reference', color: C.ref, width: 2, size: 3.2, pts: R.U.map((u, i) => [u, R.score[i], `Single pass ${tok(u)}: ${R.score[i] >= 0 ? '+' : ''}${f2(R.score[i])}`]) };
+    const full = { k: 'full', label: LAB.full, color: C.full, width: 2.6, size: 4.2, pts: MU.map((u, i) => [u, D.ft.full[i], `Hyper-epoch ${tok(u)}: +${f2(D.ft.full[i])}`]) };
+    const me = { k: 'me', label: LAB.me, color: C.me, dash: '6 4.5', width: 1.8, size: 3.2, pts: MU.map((u, i) => [u, D.ft.me[i], `Tuned multi-epoch ${tok(u)}: +${f2(D.ft.me[i])}`]) };
+    const xu = { k: 'xu', label: LAB.xu, color: C.xu, marker: 'star', size: 4.4, dash: '0.1 4.5', width: 1.6, pts: D.xu.D.map((u, i) => [u, D.ft_xu[i], `Xu et al. ${tok(u)}: +${f2(D.ft_xu[i])}`]) };
+    const y3 = R.score[R.score.length - 1];
+    return legend([ref, full, me, xu]) + '<div class="plot">' + plot({
+      aria: 'Pooled fine-tuning score against pretraining tokens', w: 760, h: 400,
+      x: { ...xTok, dom: [4, 3600], ticks: [5, 10, 20, 50, 100, 200, 500, 1000, 3000], label: 'Pretraining tokens (unique U; Xu et al.: tokens seen once)' },
+      y: { dom: [0, 9.2], ticks: [0, 2, 4, 6, 8], fmt: v => (v > 0 ? '+' : '') + v, label: 'Pooled fine-tuning score (ln U units, higher is better)' },
+      bands: [{ y0: y3, y1: 9.2, fill: '#e4eefb', label: 'better than a single pass over 3B' }],
+      hlines: [{ y: y3, label: 'single pass, 3B', color: C.ref, lx: 4.4 }],
+      series: [me, ref, xu, full]
+    }) + '</div>';
+  };
+
+  /* Figure B1: fine-tuning multiplier */
+  fig.ftmult = () => {
+    const mk = (k, arr, color, extra) => ({ k, label: LAB[k], color, width: k === 'full' ? 2.6 : 1.8, size: k === 'full' ? 4.2 : 3.4, ...extra,
+      pts: MU.map((u, i) => [u, arr[i][0], `${LAB[k]} ${tok(u)}: ${arr[i][1] ? 'beats 3B, ≥ ' + arr[i][0].toFixed(0) + '×' : arr[i][0].toFixed(1) + '×'}`, arr[i][1] ? { hollow: true, marker: 'tri', size: 4.6 } : null]) });
+    const full = mk('full', D.ft_mult.full, C.full), single = mk('single', D.ft_mult.single, C.single, { marker: 'square' }), me = mk('me', D.ft_mult.me, C.me, { dash: '6 4.5' });
+    const lb = { k: 'lb', label: 'beats single-pass 3B (lower bound 3B / U)', color: C.muted, noLine: true, marker: 'tri', hollowLegend: true, pts: [] };
+    return legend([full, single, me, lb]) + '<div class="plot">' + plot({
+      aria: 'Fine-tuning data multiplier against unique tokens', w: 760, h: 380,
+      x: { ...xTok, dom: [4.2, 240], ticks: MU, label: 'Unique pretraining tokens U' },
+      y: { log: true, dom: [1, 100], ticks: [1, 2, 5, 10, 20, 50, 100], fmt: v => v + '×', label: 'Fine-tuning data multiplier (log scale)' },
+      series: [me, single, full]
+    }) + '</div>';
+  };
+
+  /* Figure C1: per-task small multiples */
+  const TNAME = { lipo: 'Lipophilicity', tox21: 'Tox21', sider: 'SIDER', clintox: 'ClinTox', esol: 'ESOL', freesolv: 'FreeSolv', bbbp: 'BBBP', bace: 'BACE' };
+  const niceTicks = (lo, hi, n) => {
+    const span = hi - lo, step0 = span / n, p = Math.pow(10, Math.floor(Math.log10(step0)));
+    const step = [1, 2, 2.5, 5, 10].map(s => s * p).find(s => s >= step0);
+    const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6)); return out;
+  };
+  fig.tasks = () => {
+    const keys = Object.keys(D.tasks);
+    const series = [{ k: 'ref', label: 'Single-epoch reference', color: C.ref }, { k: 'full', label: LAB.full, color: C.full },
+                    { k: 'single', label: 'Best single snapshot', color: C.single, marker: 'square' }, { k: 'xu', label: LAB.xu, color: C.xu, marker: 'star', dash: '0.1 4.5' }];
+    let s = legend(series) + '<div class="multiples">';
+    keys.forEach(t => {
+      const T = D.tasks[t], rmse = T.g < 0;
+      const all = [...T.ref, ...T.full, ...T.single, ...T.xu], lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * .08;
+      const ticks = niceTicks(lo - pad, hi + pad, 3), dec = ticks.length > 1 && (ticks[1] - ticks[0]) < .05 ? 3 : 2;
+      const dom = rmse ? [hi + pad, lo - pad] : [lo - pad, hi + pad];
+      const fv = v => v.toFixed(3);
+      s += '<div class="plot small">' + plot({
+        aria: `${TNAME[t]} fine-tuning`, w: 260, h: 210, m: { l: 42, r: 10, t: 40, b: 30 }, title: TNAME[t],
+        x: { log: true, dom: [4, 3600], ticks: [5, 50, 500, 3000], fmt: tok },
+        y: { dom, ticks, fmt: v => v.toFixed(dec), label: rmse ? 'RMSE ↓ (flipped)' : 'ROC-AUC' },
+        series: [
+          { k: 'ref', color: C.ref, width: 1.6, size: 2.4, pts: D.ft_ref.U.map((u, i) => [u, T.ref[i], `Single pass ${tok(u)}: ${fv(T.ref[i])}`]) },
+          { k: 'xu', color: C.xu, marker: 'star', size: 3.4, width: 1.3, dash: '0.1 4', pts: D.xu.D.map((u, i) => [u, T.xu[i], `Xu ${tok(u)}: ${fv(T.xu[i])}`]) },
+          { k: 'single', color: C.single, marker: 'square', size: 2.4, width: 1.4, pts: MU.map((u, i) => [u, T.single[i], `Single snapshot ${tok(u)}: ${fv(T.single[i])}`]) },
+          { k: 'full', color: C.full, width: 2, size: 2.8, pts: MU.map((u, i) => [u, T.full[i], `Hyper-epoch ${tok(u)}: ${fv(T.full[i])}`]) }
+        ]
+      }) + '</div>';
+    });
+    return s + '</div>';
+  };
+
+  /* Figure 2: multiplier vs number of snapshots */
+  const RAMP = ['#b7d0f2', '#93b8ea', '#6c9ee1', '#4686d8', '#2a6fc4', '#1e57a0', '#143f78'];
+  fig.ens = () => {
+    const series = MU.map((u, j) => {
+      const E = D.ens[String(u)];
+      return { k: 'u' + u, label: tok(u), color: RAMP[j], width: 2, size: 3.2, pts: E.k.map((k, i) => { const m = pmult(E.loss[i], u); return [k, m, `${tok(u)}, ${k} snapshot${k > 1 ? 's' : ''}: ${f2(m)}×`]; }) };
+    });
+    return legend(series) + '<div class="plot">' + plot({
+      aria: 'Data multiplier against number of snapshots averaged', w: 760, h: 360,
+      x: { log: true, dom: [0.85, 76], ticks: [1, 2, 4, 8, 16, 32, 64], label: 'Snapshots averaged, k' },
+      y: { dom: [2.4, 6.5], ticks: [2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5], fmt: v => v + '×', label: 'Data multiplier' },
+      series
+    }) + '</div>';
+  };
+
+  /* Figure 3: heatmap table of pretraining multipliers */
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const mix = (c0, c1, t) => { const a = hex(c0), b = hex(c1); return `rgb(${a.map((v, i) => Math.round(lerp(v, b[i], t))).join(',')})`; };
+  const seqColor = t => t < .5 ? mix('#f1f5fb', '#7aa7e4', t * 2) : mix('#7aa7e4', '#173f7a', (t - .5) * 2);
+  const spark = (vals, lo, hi, color) => {
+    const w = 72, h = 23, xs = vals.map((_, i) => 3 + i * (w - 6) / (vals.length - 1)), ys = vals.map(v => h - 3 - (v - lo) / (hi - lo) * (h - 6));
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><path d="${xs.map((x, i) => (i ? 'L' : 'M') + x.toFixed(1) + ' ' + ys[i].toFixed(1)).join(' ')}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/>${xs.map((x, i) => `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="2.1" fill="${color}"/>`).join('')}</svg>`;
+  };
+  function heatTable(rows, cols, opts) {
+    let s = `<div class="heat-key"><span>${opts.keyLabel}</span><span class="ramp" style="background:linear-gradient(90deg,${opts.rampCss})"></span><span>${opts.keyEnds}</span></div>`;
+    s += '<div class="scroll"><table class="heatmap"><thead><tr><th class="stub" style="text-align:left">' + opts.stub + '</th>' + cols.map((c, j) => `<th data-s="${j}">${c}</th>`).join('') + (opts.spark ? '<th class="spark">across U</th>' : '') + '</tr></thead><tbody>';
+    rows.forEach(r => {
+      s += `<tr><th>${r.label}</th>` + r.vals.map((v, j) => {
+        if (v == null) return `<td data-s="${j}"><div class="tile">—</div></td>`;
+        const bg = opts.color(v), dark = opts.dark(v);
+        return `<td data-s="${j}" tabindex="0"><div class="tile" style="background:${bg};color:${dark ? '#ffffff' : '#0f172a'}">${opts.fmt(v, r)}</div></td>`;
+      }).join('') + (opts.spark ? `<td class="spark">${spark(r.vals, opts.lo, opts.hi, r.color)}</td>` : '') + '</tr>';
+    });
+    return s + '</tbody></table></div>';
+  }
+  function wireHeat(t) {
+    const clear = () => t.querySelectorAll('.on').forEach(n => n.classList.remove('on'));
+    const show = td => { clear(); const j = td.getAttribute('data-s'); td.classList.add('on'); td.parentNode.querySelector('th').classList.add('on');
+      t.querySelectorAll(`thead th[data-s="${j}"]`).forEach(n => n.classList.add('on')); };
+    const cell = ev => { const n = ev.target.closest ? ev.target.closest('td[data-s]') : null; return n && t.contains(n) ? n : null; };
+    t.addEventListener('pointerover', ev => { const n = cell(ev); if (n) show(n); });
+    t.addEventListener('focusin', ev => { const n = cell(ev); if (n) show(n); });
+    t.addEventListener('pointerleave', clear); t.addEventListener('focusout', clear);
+  }
+  fig.heat = () => {
+    const rows = [
+      { label: 'Full recipe', vals: D.pre.full.mult, color: C.full },
+      { label: '− distillation', vals: D.pre.nodist.mult, color: C.nodist },
+      { label: '− looping', vals: D.pre.noloop.mult, color: C.noloop },
+      { label: '− distillation − looping', vals: D.pre.neither.mult, color: C.neither },
+      { label: '− ensembling (best snapshot)', vals: D.pre.single.mult, color: C.single },
+      { label: 'Tuned multi-epoch', vals: D.me_mult, color: C.me }
+    ];
+    const lo = 2, hi = 6.3;
+    return heatTable(rows, MU.map(tok), {
+      stub: 'Arm', keyLabel: 'Data multiplier', keyEnds: '2× → 6.2×', spark: true, lo, hi,
+      rampCss: '#f1f5fb,#7aa7e4,#173f7a',
+      color: v => seqColor(Math.max(0, Math.min(1, (v - lo) / (hi - lo)))), dark: v => (v - lo) / (hi - lo) > .55,
+      fmt: v => v.toFixed(2) + '×'
+    });
+  };
+
+  /* Figure 4: paired z, diverging */
+  fig.paired = () => {
+    const names = { single: '− ensembling', nodist: '− distillation', noloop: '− looping', neither: '− distillation − looping' };
+    const rows = D.paired.rows.map((r, i) => ({ label: 'vs ' + names[r], vals: D.paired.z[i] }));
+    const lim = 5;
+    const div = v => { const t = Math.max(-1, Math.min(1, v / lim)); return t >= 0 ? mix('#f1f3f6', '#2a78d6', t) : mix('#f1f3f6', '#eb6834', -t); };
+    return heatTable(rows, MU.map(tok), {
+      stub: 'Full recipe', keyLabel: 'Paired z', keyEnds: '−5 (arm better) · 0 · +5 (full better)',
+      rampCss: '#eb6834,#f1f3f6,#2a78d6', color: div, dark: v => Math.abs(v) > 3.2,
+      fmt: v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1)
+    });
+  };
+
+  /* Figure 6: two effects */
+  fig.xu = () => {
+    const W = 760, H = 190, l = 40, r = 40;
+    const X = scale([50, 4500], [l, W - r], true), y = 96;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Tokens needed to reach the loss of Xu et al.'s 3B model">`;
+    [50, 100, 200, 500, 1000, 2000, 3000].forEach(v => { const x = X(v); s += `<line class="grid" x1="${x}" x2="${x}" y1="40" y2="${H - 44}"/><text x="${x}" y="${H - 26}" text-anchor="middle">${tok(v)}</text>`; });
+    s += `<text x="${(l + W - r) / 2}" y="${H - 6}" text-anchor="middle">Tokens needed to reach loss 0.5735 (log scale)</text>`;
+    const P = [[3000, C.xu, 'star', 'Xu et al., one pass', '3B'], [490, C.ref, 'circle', 'Our single pass', '≈490M'], [85, C.full, 'circle', 'Hyper-epoch', '≈85M unique']];
+    const arrow = (a, b, label, c) => { const x0 = X(a) - 12, x1 = X(b) + 12, ym = y - 26;
+      return `<path d="M${x0} ${y - 10} Q ${(x0 + x1) / 2} ${ym - 18} ${x1} ${y - 10}" fill="none" stroke="${c}" stroke-width="1.4"/><path d="M${x1} ${y - 10} l9 -2 l-4 7 z" fill="${c}"/>` +
+        `<text class="anno" x="${(x0 + x1) / 2}" y="${ym - 22}" text-anchor="middle">${label}</text>`; };
+    s += arrow(3000, 490, 'Effect 1: training setup, ≈6.2× less', C.muted) + arrow(490, 85, 'Effect 2: repetition, 5.7× less', C.full);
+    P.forEach(p => { s += mark(p[2], X(p[0]), y, p[1], p[2] === 'star' ? 6.5 : 6, false) +
+      `<text class="dark" x="${X(p[0])}" y="${y + 24}" text-anchor="middle">${p[3]}</text><text x="${X(p[0])}" y="${y + 40}" text-anchor="middle">${p[4]}</text>`; });
+    return '<div class="plot">' + s + '</svg></div>';
+  };
+
+  document.querySelectorAll('[data-fig]').forEach(el => {
+    try { el.innerHTML = fig[el.getAttribute('data-fig')](); } catch (e) { el.textContent = 'Figure failed to render: ' + e.message; }
+    wire(el); el.querySelectorAll('table.heatmap').forEach(wireHeat);
+  });
+
+  /* ---------- citations: hover cards from the reference list ---------- */
+  document.querySelectorAll('a.ref').forEach(a => {
+    const b = document.getElementById('ref-' + a.getAttribute('data-ref')); if (!b) return;
+    const w = document.createElement('span'); w.className = 'cite'; a.parentNode.insertBefore(w, a); w.appendChild(a);
+    a.href = '#ref-' + a.getAttribute('data-ref');
+    const card = document.createElement('span'); card.className = 'cite-card'; card.textContent = b.textContent; w.appendChild(card);
+  });
+
+  /* ---------- outline ---------- */
+  const heads = [...document.querySelectorAll('main h2[id], main h3[id], #tldr, #references, #appendix')];
+  const navHtml = heads.map(h => {
+    const isSub = h.tagName === 'H3', num = h.querySelector('.num') ? h.querySelector('.num').textContent : '';
+    const ttl = h.id === 'tldr' ? 'TL;DR' : h.id === 'references' ? 'References' : h.id === 'appendix' ? 'Appendix' : h.textContent.replace(num, '').trim();
+    if (h.id.startsWith('appendix-')) return '';
+    return `<a class="${isSub ? 'sub' : ''}" href="#${h.id}"><span class="num">${num}</span> <span class="ttl">${ttl}</span></a>`;
+  }).join('');
+  document.getElementById('toc').innerHTML = navHtml; document.getElementById('toc-inline').innerHTML = navHtml;
+  const links = [...document.querySelectorAll('#toc a')], targets = links.map(a => document.getElementById(a.getAttribute('href').slice(1)));
+  const markToc = () => { const line = .3 * innerHeight; let on = -1; targets.forEach((t, i) => { if (t.getBoundingClientRect().top <= line) on = i; });
+    links.forEach((a, i) => a.classList.toggle('active', i === on)); };
+  addEventListener('scroll', markToc, { passive: true }); addEventListener('resize', markToc); markToc();
+
+  /* ---------- math ---------- */
+  const renderMath = () => { if (window.renderMathInElement) renderMathInElement(document.querySelector('main'), {
+    delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], output: 'mathml', throwOnError: false }); };
+  if (window.renderMathInElement) renderMath(); else addEventListener('load', renderMath);
+
+})();
+</script>
+
+</body>
+</html>
