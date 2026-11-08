@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hyper-Epoch Training for Data-Constrained Scientific Pretraining</title>
+<title>Data-Efficient Scientific Pretraining</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,450;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -139,6 +139,23 @@
   .appendix-start { margin: 4em 0 0; padding-top: 1.4em; border-top: 1px solid var(--rule); }
   .appendix-start + h2 { margin-top: .5em; }
 
+  /* hero animation */
+  .lead { margin: 6px 0 30px; }
+  .lead .panel { padding: 0; overflow: hidden; }
+  .anim svg { display: block; width: 100%; height: auto; }
+  .anim text { font-family: var(--body); }
+  .anim .mono { font-family: var(--mono); }
+  .anim-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px 12px; border-top: 1px solid var(--rule); flex-wrap: wrap; }
+  .anim-bar button { font: 500 12.5px var(--body); color: var(--muted); background: none; border: 1px solid var(--rule); border-radius: 7px; padding: 4px 10px; cursor: pointer; }
+  .anim-bar button:hover { color: var(--text); border-color: var(--rule-strong); }
+  .anim-bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chapters { display: flex; gap: 6px; flex: 1; min-width: 0; flex-wrap: wrap; }
+  .chapters button { position: relative; overflow: hidden; flex: 1 1 90px; text-align: left; padding: 5px 9px 7px; }
+  .chapters button .n { color: var(--rule-strong); margin-right: 4px; font-variant-numeric: tabular-nums; }
+  .chapters button.cur { color: var(--text); border-color: var(--rule-strong); }
+  .chapters button.cur .n { color: var(--full); }
+  .chapters button .fill { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--full); }
+
   @media (max-width: 1040px) {
     .page { display: block; padding: 24px 18px 72px; }
     main { max-width: 800px; margin: 0 auto; }
@@ -150,9 +167,20 @@
   }
   @media (prefers-reduced-motion: reduce) { .wrap [data-k], .legend .it { transition: none; } }
 </style>
+<style>
+  /* additions for the cross-domain post: domain colors follow the validated categorical order (first three slots) */
+  :root { --chem: #2a78d6; --dna: #eb6834; --cryst: #1baf7a; --ext: #475569; }
+  .triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 14px; }
+  @media (max-width: 760px) { .triple { grid-template-columns: minmax(0, 1fr); } }
+  .dom { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+  .dom::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+  .dom.chem { --c: var(--chem); } .dom.dna { --c: var(--dna); } .dom.cryst { --c: var(--cryst); }
+  .heat-title { font: 600 14px var(--display); margin: 14px 0 6px; }
+  .heat-title:first-child { margin-top: 0; }
+  table.tab td.wrap { white-space: normal; min-width: 150px; }
+</style>
 </head>
 <body>
-
 <div class="page">
   <aside class="outline">
     <p class="label">Contents</p>
@@ -161,384 +189,354 @@
 
   <main>
     <header class="title">
-      <p class="label">Q Labs Research · Applications</p>
-      <h1>Hyper-Epoch Training for Data-Constrained Scientific Pretraining</h1>
-      <p class="dek">Pretraining on molecules, genomes and crystal structures is limited by the amount of unique data rather than by compute. We train with one recipe for many passes over a fixed corpus. On SMILES, it reaches the pretraining loss of the best released molecular language models with 13–39× less unique data, and the gain carries over to property prediction.</p>
-      <p class="meta"><span>October 2026</span></p>
+      <p class="label">Q Labs Research · Applications, Part 1</p>
+      <h1>Data-Efficient Scientific Pretraining</h1>
+      <p class="authors"><span class="todo">Author names</span></p>
+      <p class="meta"><span>November 2026</span></p>
     </header>
 
     <nav class="contents-inline" id="toc-inline"></nav>
 
+    <figure class="lead" id="hero">
+      <div class="panel anim">
+        <svg id="anim" viewBox="0 0 800 500" role="img" aria-label="Animation of the recipe: a fixed set of molecules, DNA windows and crystal structures seen many times, a looped model, cycles that keep snapshots, optional extras, the averaged prediction, and the data multiplier in each domain"></svg>
+        <div class="anim-bar">
+          <button type="button" id="anim-play" aria-label="Pause animation">Pause</button>
+          <div class="chapters" id="anim-chapters"></div>
+        </div>
+      </div>
+    </figure>
+
     <section class="tldr" id="tldr">
       <h2>TL;DR</h2>
       <ul>
-        <li>In scientific domains, unique data is more limited than compute. New records come from synthesis, sequencing or simulation, and many repeat known structure: in a 98M-molecule SMILES corpus, the share of molecules with a previously unseen ring system falls from 4.5% to 0.2% as the corpus grows.</li>
-        <li>In chemistry, one hyper-epoch recipe (snapshot ensembling, chain distillation and looped depth) reaches the pretraining loss of the best released SMILES models, those of Xu et al., with <strong>13–39× less unique data</strong> at budgets from 5M to 200M unique tokens.</li>
-        <li>Against our own tuned single-pass frontier, the recipe is worth 5.4–6.2× as much unique data at every budget, and tuned plain repetition is worth 2.1–3.0×. The rest of the 13–39× comes from our single-pass baseline being stronger than that of Xu et al.</li>
-        <li>The recipe's multiplier is flat across budgets, while that of plain repetition falls from 3.0× to 2.1× between 5M and 200M unique tokens. Extra seeds change the recipe's multiplier by less than 0.25×.</li>
-        <li>On a pooled score over eight MoleculeNet tasks with scaffold splits, the recipe pretrained on 50M unique tokens scores above our single-pass 3B-token model, and at 100M above the best released 3B-token model of Xu et al.</li>
-        <li>Ensembling accounts for most of the gain. Looping contributes more at larger budgets and distillation at smaller ones.</li>
+        <li>Scientific data is scarce in a way web text is not: every crystal structure costs a quantum-mechanical calculation, and the informative part of genomes is fixed by biology. We train language models on a fixed amount of data in three different scientific domains, <span class="dom chem">molecules</span>, <span class="dom dna">eukaryotic DNA</span> and <span class="dom cryst">crystal structures</span>, with one recipe built for repeated data: snapshot ensembling over cyclic schedules and looped depth.</li>
+        <li>In every domain one training run is worth far more unique data than the tuned baselines: <strong>5.4–6.2×</strong> for molecules, <strong>5.5–8.9×</strong> for DNA and <strong>7.4–13.3×</strong> for crystals, against a single-epoch frontier tuned over model size, learning rate and batch size. Plain tuned repetition is worth 2.1–3.0×, 2.9–5.7× and 3.4–4.4×.</li>
+        <li>Against the published training recipe of each domain, run on the same data, one run of our recipe needs about 20× less data for DNA (Evo 2's recipe) and crystals (CrystaLLM's). For molecules it reaches the loss of Xu et al.'s best released model, trained on 4.4B tokens, from 85M unique tokens.</li>
+        <li>The gain carries over to every downstream task we measured: property prediction for molecules and materials, gene annotation and clinical variant effects for DNA, and zero-shot crystal structure prediction. In each domain the recipe trained on 25–50M unique tokens fine-tunes as well as or better than our longest single pass (3B tokens for molecules, 2B for DNA, the whole 694M-token crystal corpus).</li>
       </ul>
     </section>
 
     <h2 id="introduction"><span class="num">1</span>Introduction</h2>
-    <p>In scientific modeling, available compute grows faster than the supply of new observations. Each new molecule must be synthesised and characterised, each genome sequenced, and each crystal structure computed with density functional theory. More records also do not always add information: many new SMILES strings recombine parts already present in the corpus (<a href="#data-limit">Section 2</a>). We ask how much more a model can learn from a fixed corpus by training on it for many passes.</p>
-    <p>For web text, <a class="ref" data-ref="muennighoff">Muennighoff et al.</a> found that a few epochs of repeated data are nearly as useful as new data, and that further repeats are worth rapidly less. Our work on protein language models (<a class="ref" data-ref="baron">Baron et al.</a>) showed that a tuned multi-epoch recipe extracts considerably more from repeated data. <a class="ref" data-ref="q0">q0</a> introduced hyper-epoch training, a set of primitives designed for many passes over the same data.</p>
-    <p>This post applies one hyper-epoch recipe, with the same rules, to several data-constrained domains and evaluates each in the same way. Since the recipe does not change between domains, the post is organised by question, and each table and figure has one row or panel per domain. This version reports results for molecular language models trained on SMILES, a string representation of molecular structure; results for eukaryotic DNA and crystal-structure generation will be added as further rows. In chemistry we vary the number of unique tokens from 5M to 200M and compare each repeated-data run with a tuned single-pass frontier measured up to 1.5B tokens. Each result is stated as the amount of unique data a single pass would need to match it.</p>    <p>Our contributions in chemistry:</p>
+    <p>Compute for training models keeps getting cheaper. Data in the sciences does not. A computed crystal structure costs a density-functional calculation and an experimental one a synthesis. The part of a eukaryotic genome that carries most of the learnable signal is small and fixed by biology: OpenGenome2's entire curated set of eukaryotic genic windows is 0.42 trillion bases, and for most lineages far less exists. As compute outgrows data, the useful question shifts from how to get more data to how much a model can extract from the data it has.</p>
+    <p>For web text, <a class="ref" data-ref="muennighoff">Muennighoff et al.</a> found that a few repeated epochs are almost as good as new data and that each further repeat is worth quickly less. Our work on protein language models (<a class="ref" data-ref="baron">Baron et al.</a>) showed that a tuned multi-epoch recipe goes much further. <a class="ref" data-ref="q0">q0</a> then introduced hyper-epoch training, primitives built for many passes over the same data.</p>
+    <p>Here we ask whether one such recipe works across science, not in one carefully chosen domain. We picked three domains that differ in almost every way a sequence model can see: SMILES strings of molecules (a 591-token vocabulary, short documents), eukaryotic DNA (8 tokens, 2,046-base windows) and crystal structures written as CIF files (371 tokens, numbers and symmetry symbols). In each we build the same measurement from scratch: a tuned single-epoch frontier, a tuned multi-epoch baseline, the domain's published training recipe, and downstream tasks where pretraining is known to matter.</p>
+    <p>Our contributions:</p>
     <ul>
-      <li>A measurement of how quickly new structure appears in a 98M-molecule corpus: the rate of new scaffolds and ring systems falls steadily as the corpus grows.</li>
-      <li>Tuned baselines: a single-epoch frontier tuned over model size, learning rate and batch size (1,377 runs), and a tuned multi-epoch arm (3,648 runs).</li>
-      <li>One hyper-epoch recipe with preset rules across budgets that reaches the pretraining loss of the best released checkpoints of Xu et al. with 13–39× less unique data, and is worth 5.4–6.2× unique data against our own single-pass frontier, from 5M to 200M unique tokens.</li>
-      <li>Downstream evidence on eight MoleculeNet tasks with scaffold splits: from 50M unique tokens the recipe fine-tunes better than a single pass over 3B.</li>
-      <li>A leave-one-out ablation of every component, on both pretraining and fine-tuning.</li>
+      <li>One recipe that, in all three domains, makes one training run worth 5.4–13.3× as much unique data as a tuned single pass, well above what tuned repetition achieves in the same domain (2.1–5.7×).</li>
+      <li>Gains of about 20× against the published training recipes for DNA (Evo 2) and crystals (CrystaLLM), run on the same data.</li>
+      <li>Downstream evidence in every domain, with LoRA fine-tuning and zero-shot evaluations on held-out data.</li>
+      <li>Leave-one-out ablations in every domain, which separate the components that help everywhere from those that help in one domain only.</li>
     </ul>
 
-    <h2 id="data-limit"><span class="num">2</span>Why Pretraining Is Data-Constrained</h2>
-    <p>Training compute can be increased by buying hardware. Scientific data increases only as fast as experiments and simulations produce it, and much of the new data overlaps with existing data. A scientific corpus is therefore limited in two ways: by the number of records and by the amount of new structure each additional record contains. The second limit can apply even when the corpus is large.</p>
+    <h2 id="method"><span class="num">2</span>Method</h2>
 
-    <h3 id="data-limit-molecules"><span class="num">2.1</span>Molecules</h3>
-    <p>PubChem lists about 119 million compounds (<a class="ref" data-ref="pubchem">Kim, S. et al.</a>). Make-on-demand catalogues are larger: Enamine REAL contains more than 80 billion virtual products (<a class="ref" data-ref="enamine">Enamine</a>). These products are enumerated from a fixed set of building blocks and about 170 validated reactions, so the size of the catalogue reflects the number of combinations rather than the amount of new chemistry.</p>
-    <p>We measured how fast new structure appears in the corpus we train on. Streaming its 97.7M deduplicated molecules in training order, we count distinct Bemis–Murcko scaffolds (<a class="ref" data-ref="bemis">Bemis and Murcko</a>), their generic forms (atom and bond types removed) and ring systems, together with the share of molecules that contain a ring system not seen earlier (Table 1). If every molecule brought new structure, the counts would grow in proportion to the corpus. Instead they grow as $N^{0.83}$ for scaffolds, $N^{0.63}$ for generic scaffolds and $N^{0.59}$ for ring systems, and the novel-ring-system rate falls from 4.5% at 100k molecules to 0.2% at 97.7M. Of the molecules added between 30M and 97.7M, 99.8% contain only ring systems that already occur earlier in the corpus. Our budgets of 5M to 200M unique tokens (about 0.1M to 4.5M molecules) lie in the range where the novel-ring-system rate has already fallen from 4.5% to below 1%.</p>
-
-    <figure class="table" id="tab-diversity">
-      <figcaption><span class="fignum">Table 1.</span> New structure as the SMILES training corpus grows, counted in training order. Novel ring-system rate: share of the molecules since the previous row that contain a ring system absent from all earlier molecules. Exponents are least-squares fits of count against $N$ in log-log space.</figcaption>
-      <div class="scroll"><table class="tab">
-        <thead><tr><th class="r">molecules $N$</th><th class="r">scaffolds</th><th class="r">generic scaffolds</th><th class="r">ring systems</th><th class="r">novel ring-system rate</th></tr></thead>
-        <tbody>
-          <tr><td class="r">100k</td><td class="r">77.6k</td><td class="r">36.8k</td><td class="r">4.6k</td><td class="r">4.5%</td></tr>
-          <tr><td class="r">300k</td><td class="r">213k</td><td class="r">83.4k</td><td class="r">8.1k</td><td class="r">1.7%</td></tr>
-          <tr><td class="r">1M</td><td class="r">620k</td><td class="r">194k</td><td class="r">15.4k</td><td class="r">1.0%</td></tr>
-          <tr><td class="r">3M</td><td class="r">1.58M</td><td class="r">398k</td><td class="r">29.1k</td><td class="r">0.68%</td></tr>
-          <tr><td class="r">10M</td><td class="r">4.21M</td><td class="r">832k</td><td class="r">61.2k</td><td class="r">0.45%</td></tr>
-          <tr><td class="r">30M</td><td class="r">9.78M</td><td class="r">1.54M</td><td class="r">123k</td><td class="r">0.31%</td></tr>
-          <tr><td class="r">97.7M</td><td class="r">22.7M</td><td class="r">2.81M</td><td class="r">260k</td><td class="r">0.20%</td></tr>
-          <tr><td class="r">growth exponent</td><td class="r hi">0.83</td><td class="r hi">0.63</td><td class="r hi">0.59</td><td class="r">—</td></tr>
-        </tbody>
-      </table></div>
-    </figure>
-
-    <p>Labelled data is smaller still. The eight property-prediction tasks we fine-tune on (<a href="#finetuning">Section 7</a>) have between 642 molecules (FreeSolv) and 7,831 (Tox21), because each label requires a measurement. Performance on these tasks therefore depends heavily on what the model learns in pretraining.</p>
-
-    <h3 id="data-limit-other"><span class="num">2.2</span>Genomes and Crystal Structures</h3>
-    <p>The same two limits apply to the other domains. Genomic diversity is limited by the species that have been sequenced, and eukaryotic genomes contain many repeated sequences. Open crystal-structure databases consist of density-functional-theory calculations, each of which is computationally expensive, and the largest contain a few million structures. <a href="#appendix-a">Appendix A</a> describes each corpus.</p>
-
-    <h2 id="measuring"><span class="num">3</span>Measuring Data Efficiency</h2>
-    <p>We measure every training method in units of unique data. Let $L_s(U)$ be the best validation loss that a single pass over $U$ unique tokens reaches, tuned over model size, learning rate and batch size. For a method that reaches loss $L(U)$ from the same $U$ tokens, the data multiplier is</p>
+    <h3 id="measuring"><span class="num">2.1</span>Measuring Data Efficiency</h3>
+    <p>We measure every method in units of unique data. Let $L_s(U)$ be the best held-out loss that a single pass over $U$ unique tokens reaches, tuned over model size, learning rate and batch size. For a method that reaches loss $L(U)$ from the same $U$ tokens, the data multiplier is</p>
     <div class="eq"><div class="math">$$m(U) = \frac{L_s^{-1}\big(L(U)\big)}{U},$$</div><span class="eqno">(1)</span></div>
-    <p>the unique data a single pass would need to match the method, relative to $U$. We invert the frontier by log-linear interpolation between measured budgets (5M to 1.5B in chemistry). A multiplier of 6× at 50M means that the method trained on 50M unique tokens matches a single pass over 300M.</p>
-    <p>Every domain uses the same three references, each tuned on that domain's own data:</p>
-    <ul>
-      <li><span class="runin">Single-epoch frontier.</span> One pass over $U$ with a cosine schedule, best over model size, learning rate and batch size at each budget. It defines $L_s$ in Eq. 1.</li>
-      <li><span class="runin">Tuned multi-epoch.</span> Plain repetition of the same $U$ tokens, tuned over model size, learning rate, weight decay, number of passes and batch size. It is the standard way to use repeated data.</li>
-      <li><span class="runin">Released models.</span> Where a domain has published checkpoints trained on more data, we score them on our validation set and read off how many of their training tokens the recipe matches, interpolating log-linearly between their checkpoints (<a href="#xu">Section 8</a>).</li>
-    </ul>
-    <p>All multipliers measure <strong>unique-data efficiency</strong>, not compute efficiency. The recipe makes 128 passes over its data (6.4B token presentations at 50M unique tokens in chemistry). Looped depth increases computation per token, and pretraining evaluation averages 64 snapshots. The experiments do not establish a compute-matched advantage.</p>
+    <p>the unique data a single pass would need to match the method, relative to $U$. We invert the frontier by log-linear interpolation between measured budgets. When a method beats a single pass over the whole corpus, we report only the lower bound (corpus size / $U$). A multiplier of 10× at 25M means that 25M tokens trained this way are worth 250M tokens seen once. Downstream multipliers are defined the same way on the downstream score of single-epoch models.</p>
+    <p>Each domain is scored on data no model trained on: unseen molecules for SMILES, OpenGenome2's own held-out split for DNA (with every choice made on a separate set of held-out genera), and held-out CIFs with structural duplicates of training CIFs removed for crystals.</p>
 
-    <h2 id="recipe"><span class="num">4</span>The Recipe</h2>
-    <p>The recipe combines three primitives from <a class="ref" data-ref="q0">q0</a> and <a class="ref" data-ref="chen">Chen et al.</a>, described below.</p>
-    <p><span class="runin">Snapshot ensembling.</span> Training is split into cycles. Within each cycle the learning rate anneals linearly from its peak to $0.08\times$, while weight decay ramps from $0.7\times$ to $1\times$ in anti-phase. The weights at the end of each cycle are kept as a snapshot, and the final model averages the next-token probabilities of all $K$ snapshots:</p>
+    <h3 id="recipe"><span class="num">2.2</span>The Recipe</h3>
+    <p>The recipe takes its components from <a class="ref" data-ref="q0">q0</a> and <a class="ref" data-ref="chen">Chen et al.</a> (Figure 1). Two are used in every domain:</p>
+    <p><span class="runin">Snapshot ensembling.</span> Training is split into 64 cycles. Within each cycle the learning rate anneals linearly from its peak to $0.08\times$, while weight decay ramps from $0.7\times$ to $1\times$ in anti-phase. The weights at the end of each cycle are kept as a snapshot, and the model averages the next-token probabilities of its snapshots:</p>
     <div class="eq"><div class="math">$$p_{\text{ens}}(x_t \mid x_{&lt;t}) = \frac{1}{K}\sum_{k=1}^{K} p_{\theta_k}(x_t \mid x_{&lt;t}).$$</div><span class="eqno">(2)</span></div>
-    <p><span class="runin">Chain distillation.</span> From the ninth cycle on, each cycle learns from the previous snapshot as well as from the data:</p>
-    <div class="eq"><div class="math">$$\mathcal{L} = (1-\alpha)\,\mathrm{CE} + \alpha\,T^2\,\mathrm{KL}\big(p^{(T)}_{\theta_{k-1}} \,\big\|\, p^{(T)}_{\theta}\big), \qquad \alpha = 0.45,\; T = 1.2.$$</div><span class="eqno">(3)</span></div>
-    <p>After each snapshot the weights are perturbed per tensor, $\theta \leftarrow \theta + \sigma\,\mathrm{std}(\theta)\,z$ with $z \sim \mathcal{N}(0, I)$ and $\sigma$ decaying from 0.25 to 0.05, so consecutive snapshots start from different points.</p>
-    <p><span class="runin">Looped depth.</span> One prelude block, ten core blocks applied three times with tied weights, and one coda block. Each loop boundary applies the boundary operator of <a class="ref" data-ref="chen">Chen et al.</a>: the state is RMS-normalised and a learned projection of the prelude output is re-injected. The model stores 85M parameters and executes 227M per token.</p>
+    <p><span class="runin">Looped depth.</span> One prelude block, a core of blocks applied several times with tied weights (three times for molecules and crystals, twice for DNA), and one coda block. Each loop boundary applies the boundary operator of <a class="ref" data-ref="chen">Chen et al.</a>: the state is RMS-normalised and a learned projection of the prelude output is re-injected.</p>
+    <p>Two further components were tested everywhere and kept only where they helped:</p>
+    <p><span class="runin">Chain distillation</span> trains each cycle on the previous snapshot's predictions as well as the data, $\mathcal{L} = (1-\alpha)\,\mathrm{CE} + \alpha\,T^2\,\mathrm{KL}\big(p^{(T)}_{\theta_{k-1}} \,\|\, p^{(T)}_{\theta}\big)$. <span class="runin">Weight perturbation</span> adds $\sigma\,\mathrm{std}(\theta)\,z$ to each tensor after a snapshot, so the next cycle starts from a different point.</p>
 
-    <h3 id="mixtures"><span class="num">4.1</span>Mixing Snapshots Across Runs</h3>
-    <p>Snapshots from one run are highly correlated, so adding more of them to the ensemble gives diminishing returns (<a href="#ensembles">Section 6.1</a>). Runs with different seeds or components are less correlated. The last step of the recipe pools the snapshots of every recipe run at a budget (the full recipe and its three ablations, all seeds) and combines their next-token probabilities with weights that adapt within each sequence:</p>
-    <div class="eq"><div class="math">$$w_{t+1} = (1-\alpha)\,\frac{w_t \odot p_t^{\beta}}{\lVert w_t \odot p_t^{\beta} \rVert_1} + \alpha\,\pi_{b(t)}, \qquad p_{\text{mix}}(x_t \mid x_{&lt;t}) = \sum_m w_{t,m}\, p_m(x_t \mid x_{&lt;t}),$$</div><span class="eqno">(4)</span></div>
-    <p>where $p_t$ holds each member's probability of the token just seen and $\pi_{b(t)}$ are weights fit by EM for each band of positions in the sequence. After each token, the weights of members that assigned it high probability increase, and the weights are then moved partly back toward the prior. The rule only uses earlier tokens of the same sequence, so the mixture is still a left-to-right model. The weights are never fit on the data they are scored on: the priors and $(\alpha, \beta)$ are fit on one half of the validation sequences and scored on the other half, then the other way round, and the two scores are averaged.</p>
-
-    <h3 id="one-recipe"><span class="num">4.2</span>Settings Across Budgets</h3>
-    <p>We use one preset rule set rather than running a separate search for each budget. In chemistry every run trains an 85M model (12 layers, width 768) for exactly 128 passes over $U$, split into 64 cycles of two passes. Learning rate, batch size and weight decay follow preset scaling rules as $U$ changes; their exact values are in <a href="#appendix-a">Appendix A</a>.</p>
-
-    <h2 id="results"><span class="num">5</span>Pretraining Data Multipliers</h2>
-    <p>We cut each budget $U$ from the start of a large training corpus, so the single-epoch frontier can be measured well beyond the largest budget. In chemistry the corpus is the SMILES collection of <a class="ref" data-ref="xu">Xu et al.</a>, the budgets run from 5M to 200M unique tokens, and the frontier is measured to 1.5B; data, tokenisation, validation set and models are described in <a href="#appendix-a">Appendix A</a>.</p>
-    <p>The hyper-epoch recipe is worth 5.4–6.2× as much unique data at every budget (Figure 1), about twice the tuned multi-epoch arm (2.1–3.0×). Trained on 200M unique tokens it reaches 0.5676, which a single pass needs about 1.2B tokens to match. Unlike tuned multi-epoch training, its multiplier does not decline with $U$. Extra seeds move it by at most 0.11× at 5–50M and 0.25× at 100–200M, far less than the gaps between arms.</p>
-
-    <figure id="fig-loss">
-      <div class="panel wrap" data-fig="loss"></div>
-      <figcaption><span class="fignum">Figure 1.</span> Validation loss against unique pretraining tokens. The single-epoch frontier is the best run over model size, learning rate and batch size at each budget. Stars are the best released checkpoint of Xu et al. at each pretraining size, scored on our validation set. Small markers are extra seeds. Hover for values.</figcaption>
-    </figure>
-
-    <figure class="table" id="tab-pretrain">
-      <figcaption><span class="fignum">Table 2.</span> Pretraining results, seed 0. Validation loss in nats per token, with the data multiplier in parentheses. The single-epoch frontier continues to 0.5751 at 400M, 0.5694 at 800M and 0.5665 at 1.5B.</figcaption>
+    <figure class="table" id="tab-components">
+      <figcaption><span class="fignum">Table 1.</span> Which components each domain's recipe uses, and what removing them costs (Section 6).</figcaption>
       <div class="scroll"><table class="tab">
-        <thead><tr><th class="r">$U$</th><th class="r">single-epoch</th><th class="r">tuned multi-epoch</th><th class="r">hyper-epoch</th></tr></thead>
+        <thead><tr><th class="l">component</th><th class="l">molecules</th><th class="l">DNA</th><th class="l">crystals</th></tr></thead>
         <tbody>
-          <tr><td class="r">5M</td><td class="r">0.7197</td><td class="r">3.00×</td><td class="r hi">0.6295 (5.68×)</td></tr>
-          <tr><td class="r">10M</td><td class="r">0.6745</td><td class="r">2.85×</td><td class="r hi">0.6086 (5.45×)</td></tr>
-          <tr><td class="r">20M</td><td class="r">0.6412</td><td class="r">2.63×</td><td class="r hi">0.5935 (5.44×)</td></tr>
-          <tr><td class="r">50M</td><td class="r">0.6106</td><td class="r">2.67×</td><td class="r hi">0.5799 (5.40×)</td></tr>
-          <tr><td class="r">100M</td><td class="r">0.5949</td><td class="r">2.48×</td><td class="r hi">0.5715 (6.20×)</td></tr>
-          <tr><td class="r">150M</td><td class="r">—</td><td class="r">2.30×</td><td class="r hi">0.5689 (5.95×)</td></tr>
-          <tr><td class="r">200M</td><td class="r">0.5835</td><td class="r">2.08×</td><td class="r hi">0.5676 (5.85×)</td></tr>
+          <tr><td class="l">snapshot ensembling</td><td class="l wrap">yes: the largest gain</td><td class="l wrap">yes: +1–2× at most budgets</td><td class="l wrap">yes: the largest gain</td></tr>
+          <tr><td class="l">looped depth</td><td class="l wrap">yes: gain grows with budget</td><td class="l wrap">yes: carries the gain from 20M</td><td class="l wrap">yes: helps at every budget</td></tr>
+          <tr><td class="l">chain distillation</td><td class="l wrap">yes: +0.4–0.6× at ≤50M</td><td class="l wrap">kept, adds ≤0.4×</td><td class="l wrap">no: never helped</td></tr>
+          <tr><td class="l">weight perturbation</td><td class="l wrap">yes, with distillation</td><td class="l wrap">no: no gain</td><td class="l wrap">yes: helps at 10M only</td></tr>
         </tbody>
       </table></div>
     </figure>
 
-    <!--MIX-RESULTS-->
+    <h3 id="tuning"><span class="num">2.3</span>What Is Tuned</h3>
+    <p>The cycle shape, the 64 snapshots and the loop count are fixed defaults carried from molecules to the other domains. Per domain and budget we tune only the model size, the number of passes, the peak learning rate and the weight decay (Appendix C).</p>
 
-<h2 id="analysis"><span class="num">6</span>Component Contributions</h2>
+    <h2 id="domains"><span class="num">3</span>Three Domains</h2>
+    <p>Each domain has its own corpus, held-out set, downstream tasks and published baseline (Table 2). All models are decoder-only transformers trained from scratch with Muon for matrix parameters and AdamW for embeddings and the output head, with no warmup and no dropout, on whole documents packed with a document mask so that the unique-token count is exact.</p>
 
-    <h3 id="ensembles"><span class="num">6.1</span>Ensemble Size</h3>
-    <p>The best single snapshot of a hyper-epoch run is worth 3.2–4.1×, already above tuned repetition. Averaging snapshots takes it to 5.4–6.2× (Figure 2). The two diverge with budget: the best single snapshot falls from 4.0× at 5M to 3.2× at 200M, while the full ensemble stays flat. At small budgets 16 snapshots recover almost all of the gain; at 150M and 200M the curve is still rising at 32–64, so larger budgets benefit from more snapshots.</p>
-
-    <figure id="fig-ens">
-      <div class="panel wrap" data-fig="ens"></div>
-      <figcaption><span class="fignum">Figure 2.</span> Data multiplier against the number of snapshots averaged, one line per budget. $k$ snapshots are equally spaced and end at the last one, so $k = 1$ is the final weights. Darker lines are larger budgets.</figcaption>
-    </figure>
-
-    <h3 id="components"><span class="num">6.2</span>Leave-One-Out Ablations</h3>
-    <p>At every budget we train the full recipe and three variants with everything else fixed: without distillation, without looping, and without both (cycles only). The run without ensembling is the best single snapshot of the full run. Cycles alone are worth 4.3–5.0×, still well above tuned repetition (Figure 3). Looping adds 0.3–1.3× and grows with budget: removing it costs 0.45× at 5M and 1.33× at 200M. Distillation adds 0.4–0.6× at $U \le 50$M and 0.04–0.17× from 100M on.</p>
-
-    <figure id="fig-heat">
-      <div class="panel wrap" data-fig="heat"></div>
-      <figcaption><span class="fignum">Figure 3.</span> Pretraining data multiplier of every arm at every budget. The sparkline shows each row across budgets. Hover a cell to compare.</figcaption>
-    </figure>
-
-    <p>Fine-tuning shows the same pattern with more noise (Figure 4). Removing ensembling hurts at every budget. Removing looping is neutral below 50M and clearly harmful from 100M on. Removing distillation costs little at 20–50M and more at the extremes. No component can be dropped across the whole range without a measurable loss, although at $U \le 20$M the run without looping fine-tunes as well as the full recipe.</p>
-
-    <figure id="fig-paired">
-      <div class="panel wrap" data-fig="paired"></div>
-      <figcaption><span class="fignum">Figure 4.</span> Full recipe against each leave-one-out arm on fine-tuning: paired $z$ over the ten scaffold splits, averaged over the eight tasks. Blue means the full recipe is better.</figcaption>
-    </figure>
-
-    <!--MIX-COMPONENTS-->
-
-<h2 id="finetuning"><span class="num">7</span>Property Prediction</h2>
-
-    <h3 id="protocol"><span class="num">7.1</span>Protocol</h3>
-    <p>We test whether lower pretraining loss leads to better property prediction. We fine-tune on eight MoleculeNet tasks (<a class="ref" data-ref="moleculenet">Wu et al.</a>) used by Xu et al.: BACE, BBBP, ClinTox, SIDER and Tox21 (ROC-AUC) and ESOL, FreeSolv and Lipophilicity (RMSE). HIV is left out for cost. We use ten scaffold splits (80/10/10) rather than random splits, which saturate and would hide differences between models.</p>
-    <p>The pretrained network is frozen and we train rank-8 LoRA adapters (<a class="ref" data-ref="lora">Hu et al.</a>) on the attention query and value projections plus a two-layer head, with batch 64, weight decay 0.01, EMA weights and early stopping; the learning rate is chosen per task on validation. Test-time averaging is equal across arms: every reported model averages 16 sets of predictions, from 16 snapshots for an ensemble and from 16 fine-tuning seeds for a single checkpoint.</p>
-    <p>To summarise eight tasks in one number, we fit each task's single-epoch score log-linearly in $U$ and pool the tasks with inverse-variance weights. The pooled score is in units of $\ln U$ on the single-epoch curve, so one unit is a factor of $e$ in data. Individual task scores are reported in <a href="#appendix-c">Appendix C</a>.</p>
-
-    <h3 id="finetuning-results"><span class="num">7.2</span>Results</h3>
-    <p>The pretraining gain is still present after fine-tuning (Figure 5). At 50M unique pretraining tokens, the hyper-epoch model scores +7.69 on the pooled measure, above our single-epoch 3B model at +7.35. At 100M it reaches +8.27, above the best released Xu et al. 3B-token checkpoint at +7.97. At 200M it reaches +8.61. The corresponding fine-tuning data multipliers are shown in <a href="#fig-ftmult-appendix">Appendix B</a>; the direct score comparison is easier to interpret because the single-epoch downstream curve is relatively flat.</p>
-
-    <figure id="fig-ftpooled">
-      <div class="panel wrap" data-fig="ftpooled"></div>
-      <figcaption><span class="fignum">Figure 5.</span> Pooled fine-tuning score over eight tasks (LoRA, ten scaffold splits, 16 averaged predictions per model) against pretraining tokens. The shaded band is above a single pass over 3B tokens. Stars are the released checkpoints of Xu et al., fine-tuned with the same protocol.</figcaption>
-    </figure>
-
-
-
-    <p>The pooled result is supported by individual tasks: the recipe beats our single-epoch 3B model on four of eight tasks at 50M unique tokens and seven of eight at 200M. The full breakdown, including the comparison with the released Xu et al. checkpoint, is in <a href="#appendix-c">Appendix C</a>.</p>
-
-
-
-<h2 id="xu"><span class="num">8</span>Comparison with Released Models</h2>
-    <p>We scored the released checkpoints of Xu et al. (one pass over 100M, 300M, 1B and 3B tokens, best model size at each) on our validation set and fine-tuned them with the same 16-seed protocol. Comparing them with the hyper-epoch recipe mixes two differences, which we report separately (Figure 6).</p>
-    <p><span class="runin">Effect 1: our single pass against theirs.</span> Both are single-epoch models, so this isolates the training setup. In pretraining loss our frontier is better at every size: it matches their 100M, 300M, 1B and 3B models with about 35M, 70M, 210M and 490M tokens. In fine-tuning the order reverses at equal data: their 3B model scores +7.97, our single pass over 3B +7.35. Their training code applies dropout 0.1 during pretraining and ours does not; dropout would raise single-pass loss while possibly helping transfer. We have not yet tested which difference accounts for the gap.</p>
-    <p><span class="runin">Effect 2: hyper-epoch training against our single pass.</span> This is the subject of the post and is measured entirely against our own frontier. The recipe reaches the loss of their 3B model (0.5735) at about 85M unique tokens, 5.7× less than our single pass needs. On fine-tuning, where Effect 1 goes the other way, the recipe still scores above their 3B model from 100M unique tokens.</p>
-
-    <figure id="fig-xu">
-      <div class="panel wrap" data-fig="xu"></div>
-      <figcaption><span class="fignum">Figure 6.</span> Tokens needed to reach the pretraining loss of the best released 3B-token model of Xu et al. (0.5735). Only the second step measures the value of repetition.</figcaption>
-    </figure>
-
-    <p><span class="runin">Both effects together.</span> For each budget we read off how many tokens a single pass of Xu et al. needs to reach the recipe's pretraining loss, interpolating log-linearly in tokens between their best checkpoints at 100M, 300M, 1B and 3B (Table 3). Trained on 10M–50M unique tokens, the recipe matches their 160M-token to 1.4B-token models, 16–28× more data. From 100M unique tokens on, its loss is lower than that of their best 3B-token model; extending their last segment puts the equivalent at 3.9B–6.2B tokens, 31–39× the data. Across the whole range the recipe needs 13–39× less unique data than the best released models.</p>
-
-    <figure class="table" id="tab-xu">
-      <figcaption><span class="fignum">Table 3.</span> Tokens a single pass of Xu et al. needs to reach the recipe's pretraining loss, and the ratio to the recipe's unique tokens. Values marked * lie outside their 100M–3B checkpoints and extend the nearest segment of their loss curve.</figcaption>
+    <figure class="table" id="tab-domains">
+      <figcaption><span class="fignum">Table 2.</span> The three domains.</figcaption>
       <div class="scroll"><table class="tab">
-        <thead><tr><th class="r">$U$</th><th class="r">hyper-epoch loss</th><th class="r">Xu et al. tokens to match</th><th class="r">data multiplier</th></tr></thead>
+        <thead><tr><th class="l"></th><th class="l"><span class="dom chem">molecules</span></th><th class="l"><span class="dom dna">eukaryotic DNA</span></th><th class="l"><span class="dom cryst">crystals</span></th></tr></thead>
         <tbody>
-          <tr><td class="r">5M</td><td class="r">0.6295</td><td class="r">63M*</td><td class="r hi">13×*</td></tr>
-          <tr><td class="r">10M</td><td class="r">0.6086</td><td class="r">159M</td><td class="r hi">16×</td></tr>
-          <tr><td class="r">20M</td><td class="r">0.5935</td><td class="r">319M</td><td class="r hi">16×</td></tr>
-          <tr><td class="r">50M</td><td class="r">0.5799</td><td class="r">1.38B</td><td class="r hi">28×</td></tr>
-          <tr><td class="r">100M</td><td class="r">0.5715</td><td class="r">3.85B*</td><td class="r hi">39×*</td></tr>
-          <tr><td class="r">150M</td><td class="r">0.5689</td><td class="r">5.30B*</td><td class="r hi">35×*</td></tr>
-          <tr><td class="r">200M</td><td class="r">0.5676</td><td class="r">6.16B*</td><td class="r hi">31×*</td></tr>
+          <tr><td class="l">corpus</td><td class="l wrap">SMILES corpora of Xu et al.</td><td class="l wrap">OpenGenome2 eukaryotic genic windows (451 assemblies, 367 genera)</td><td class="l wrap">CrystaLLM's CIFs from MP, OQMD, NOMAD (2.05M structures)</td></tr>
+          <tr><td class="l">vocabulary</td><td class="l">591 tokens</td><td class="l">8 (ACGTN + 3)</td><td class="l">371 tokens</td></tr>
+          <tr><td class="l">unique budgets</td><td class="l">5M–200M</td><td class="l">5M–200M</td><td class="l">5M–200M</td></tr>
+          <tr><td class="l">single-epoch frontier</td><td class="l">5M–1.5B</td><td class="l">5M–2B</td><td class="l">5M–694M (whole corpus)</td></tr>
+          <tr><td class="l">held-out loss</td><td class="l wrap">next-token NLL on 2M tokens of held-out molecules</td><td class="l wrap">OpenGenome2 held-out split; choices made on 13 held-out genera</td><td class="l wrap">structure-token NLL on 17,349 non-duplicate CIFs</td></tr>
+          <tr><td class="l">recipe model</td><td class="l">85M, looped ×3</td><td class="l">25M–85M, looped ×2</td><td class="l">113M, looped ×3</td></tr>
+          <tr><td class="l">downstream</td><td class="l wrap">8 MoleculeNet tasks, LoRA, scaffold splits</td><td class="l wrap">gene annotation in 6 held-out genera (LoRA); ClinVar zero-shot</td><td class="l wrap">3 Matbench tasks (LoRA); zero-shot structure prediction</td></tr>
+          <tr><td class="l">published recipe</td><td class="l wrap">Xu et al.'s released checkpoints</td><td class="l wrap">Evo 2's recipe on a scaled-down Evo 2</td><td class="l wrap">CrystaLLM's recipe</td></tr>
         </tbody>
       </table></div>
     </figure>
 
+    <h2 id="pretraining"><span class="num">4</span>Pretraining</h2>
+    <p>In every domain one run of the recipe sits well below the single-epoch frontier and below tuned repetition (Figure 2). For molecules it is worth 5.4–6.2× as much unique data at every budget from 5M to 200M. For DNA it is worth 5.5–8.9× on the held-out split, rising from 5M to 20M and then holding at 8–9×. For crystals it is worth 7.4–13.3× at 5M–50M, and from 100M on it beats a single pass over the whole corpus, so only lower bounds are measured there (>6.9× and >3.5×).</p>
 
+    <figure id="fig-pre">
+      <div class="panel wrap" data-fig="pre"></div>
+      <figcaption><span class="fignum">Figure 2.</span> Held-out loss against unique pretraining tokens in each domain. Labels give the data multiplier of one run of the recipe (Eq. 1). The published recipe is Xu et al.'s released checkpoints (molecules, tokens seen once), Evo 2's recipe on a scaled-down Evo 2 (DNA) and CrystaLLM's recipe (crystals), each for one pass. Hover for values.</figcaption>
+    </figure>
 
-<h2 id="conclusion"><span class="num">9</span>Conclusion and Open Questions</h2>
-    <p>In the SMILES corpus we measured, new structure becomes rare long before the supply of molecules is exhausted. With a fixed SMILES corpus, plain repetition is worth two to three times the unique data. One shared hyper-epoch recipe of ensembling, chain distillation and looping is worth five to six times, at every budget from 5M to 200M unique tokens, and reaches the pretraining loss of the best released SMILES models with 13–39× less unique data. The benefit transfers to property prediction: trained on 50M unique tokens the recipe fine-tunes better than a single pass over 3B, and at 100M it beats the best released 3B-token model. Each component contributes over part of the range, and ensembling contributes everywhere.</p>
-    <p>Three questions remain open. First, does the multiplier keep holding above 200M unique tokens, where the single-epoch frontier itself becomes capacity-limited? Second, why does looping help more as data grows? <a class="ref" data-ref="chen">Chen et al.</a> find that in multi-epoch training looping acts as a regulariser and that it becomes compute-optimal to add loops as models grow, which suggests the loop count should scale with the budget too. Third, does the recipe hold for continuous prediction objectives? Every domain in this post is trained by next-token prediction over a discrete vocabulary, and each component relies on that: snapshot ensembling and the mixture average categorical next-token distributions, and chain distillation matches them with a KL divergence. Objectives such as regressing atomic coordinates, energies or forces, or training diffusion and flow-matching models, have no categorical output to average, so each component would need a counterpart for continuous outputs. We have not tested whether the multipliers carry over to that setting.</p>
+    <p>Figure 3 puts the three domains on one axis. Tuned repetition declines with budget in every domain, while the recipe holds or rises. The multipliers differ between domains mostly because the frontiers differ: on the crystal frontier each doubling of data buys only 0.014–0.025 nats, so the recipe's nearly constant gain of 0.055–0.065 nats is worth many doublings; the DNA frontier sits on a plateau until about 50M tokens and then drops sharply.</p>
 
-    <h2 id="related-work"><span class="num">10</span>Related Work</h2>
-    <p><span class="runin">Data-constrained training.</span> <a class="ref" data-ref="muennighoff">Muennighoff et al.</a> fit scaling laws for repeated data and found that the value of repeats decays after a few epochs. <a class="ref" data-ref="baron">Baron et al.</a> showed that dense models with Muon and strong weight decay substantially improve multi-epoch training for proteins, and named snapshot ensembling and chain distillation as next steps, which this work takes up. For web text, <a class="ref" data-ref="kim">Kim, K. et al.</a> show that with ample compute, much stronger regularisation, ensembling and distillation reach the same loss with 5.17× less data at 200M tokens.</p>
-    <p><span class="runin">Hyper-epoch primitives.</span> Snapshot ensembles (<a class="ref" data-ref="huang">Huang et al.</a>) reuse a cyclic schedule (<a class="ref" data-ref="sgdr">Loshchilov and Hutter</a>) to collect many models from one run. <a class="ref" data-ref="hinton">Hinton et al.</a> and <a class="ref" data-ref="ban">Furlanello et al.</a> studied distilling a model into a fresh copy of itself. <a class="ref" data-ref="q0">q0</a> combines these into primitives for hyper-epoch pretraining.</p>
-    <p><span class="runin">Looped transformers.</span> Weight-tied depth dates to the Universal Transformer (<a class="ref" data-ref="ut">Dehghani et al.</a>). <a class="ref" data-ref="chen">Chen et al.</a> introduce the boundary operator we use and show that recursion and model growth change pretraining scaling exponents.</p>
-    <p><span class="runin">Chemical data and diversity.</span> PubChem (<a class="ref" data-ref="pubchem">Kim, S. et al.</a>) is the largest open database of known compounds, and make-on-demand spaces such as Enamine REAL (<a class="ref" data-ref="enamine">Enamine</a>) enumerate many more from a fixed set of building blocks and reactions. Bemis–Murcko scaffolds (<a class="ref" data-ref="bemis">Bemis and Murcko</a>) are the standard way to group molecules by framework and underlie the scaffold splits we use.</p>
-    <p><span class="runin">Chemical language models.</span> <a class="ref" data-ref="xu">Xu et al.</a> study scaling of SMILES language models and release the checkpoints we compare against. MoleculeNet (<a class="ref" data-ref="moleculenet">Wu et al.</a>) provides the downstream tasks.</p>
+    <figure id="fig-mult">
+      <div class="panel wrap" data-fig="mult"></div>
+      <figcaption><span class="fignum">Figure 3.</span> Data multiplier of one run of the recipe (solid) and of tuned repetition (dashed) in each domain. Open triangles: the recipe beats a single pass over the whole crystal corpus, so only the lower bound is measured.</figcaption>
+    </figure>
+
+    <p>Every number in the main text is for one training run. With more compute, training several runs at a budget and mixing them raises the multipliers further (Appendix B).</p>
+
+    <figure class="table" id="tab-summary">
+      <figcaption><span class="fignum">Table 3.</span> Pretraining data multipliers at a glance, against each domain's tuned single-epoch frontier. "&gt;": beats a single pass over the whole corpus.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="l"></th><th class="r">tuned repetition</th><th class="r">recipe, one run</th></tr></thead>
+        <tbody>
+          <tr><td class="l"><span class="dom chem">molecules</span> (5M–200M)</td><td class="r">2.1–3.0×</td><td class="r hi">5.4–6.2×</td></tr>
+          <tr><td class="l"><span class="dom dna">DNA</span> (5M–200M, held-out split)</td><td class="r">2.9–5.7×</td><td class="r hi">5.5–8.9×</td></tr>
+          <tr><td class="l"><span class="dom cryst">crystals</span> (5M–50M)</td><td class="r">3.4–4.0× (25M–50M)</td><td class="r hi">7.4–13.3×</td></tr>
+          <tr><td class="l"><span class="dom cryst">crystals</span> (100M, 200M)</td><td class="r">4.4×, 3.4×</td><td class="r hi">&gt;6.9×, &gt;3.5×</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <h2 id="published"><span class="num">5</span>Against Published Recipes</h2>
+    <p>Each domain has a published model whose training recipe we can run or score. These comparisons mix two effects: our tuned single pass against theirs, and repetition against a single pass. Only the second is the value of repeated data, so we report both (Table 4).</p>
+    <p><span class="runin"><span class="dom dna">DNA.</span></span> Evo 2's recipe (one pass, AdamW with warmup and cosine decay) on a parameter-matched scaled-down Evo 2 is worth only 0.2–1.7× our single pass: it stays on a loss plateau until about 300M tokens. On its curve one run of our recipe needs 18–24× less data from 5M to 200M, and at 100M unique tokens it matches the held-out loss the Evo 2 recipe reaches with 2B. Both the optimiser and the architecture contribute to the plateau: the scaled-down Evo 2 trained with our recipe is as good as our transformer.</p>
+    <p><span class="runin"><span class="dom cryst">Crystals.</span></span> CrystaLLM's recipe, tuned per budget for one pass, is worth 0.3–0.6× our single pass. On its curve one run of our recipe is worth 21–24× at 5M–25M, and from 50M on it is below that recipe's loss on the whole corpus. CrystaLLM's released checkpoints cannot serve as baselines: they were trained on all of CrystaLLM's data, including the held-out split.</p>
+    <p><span class="runin"><span class="dom chem">Molecules.</span></span> Xu et al. released single-pass checkpoints trained on up to 4.4B tokens. Our tuned single pass reaches the loss of their best model with about 9× less data, and the recipe needs a further 5.7×: it reaches that loss at about 85M unique tokens. In fine-tuning, their best model is ahead of our single pass over 3B, but the recipe overtakes it from 100M unique tokens.</p>
+
+    <figure class="table" id="tab-published">
+      <figcaption><span class="fignum">Table 4.</span> One run of our recipe measured on each published recipe's single-pass curve, and that recipe measured on our frontier. "&gt;": below the published recipe's loss on the whole corpus.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="l">domain</th><th class="l">published recipe</th><th class="r">its single pass, on our frontier</th><th class="r">our recipe, on its curve</th></tr></thead>
+        <tbody>
+          <tr><td class="l"><span class="dom dna">DNA</span></td><td class="l">Evo 2 (scaled-down)</td><td class="r">0.2–1.7×</td><td class="r hi">18–24× (5M–200M)</td></tr>
+          <tr><td class="l"><span class="dom cryst">crystals</span></td><td class="l">CrystaLLM</td><td class="r">0.3–0.6×</td><td class="r hi">21–24× (5M–25M), &gt;14× at 50M</td></tr>
+          <tr><td class="l"><span class="dom chem">molecules</span></td><td class="l">Xu et al. (released)</td><td class="r">their best model's loss: ≈9× our data</td><td class="r hi">reaches it with 85M unique tokens</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <h2 id="downstream"><span class="num">6</span>Downstream Tasks</h2>
+    <p>Lower pretraining loss matters only if it transfers. In each domain we chose downstream tasks where pretraining is known to help, and we fine-tune with LoRA adapters on a frozen network so that the comparison is about the pretrained representation (Figure 4).</p>
+    <ul>
+      <li><span class="runin"><span class="dom chem">Molecules:</span></span> eight MoleculeNet tasks under scaffold splits, pooled into one score in units of $\ln U$ on the single-epoch curve. From 50M unique tokens the recipe fine-tunes better than a single pass over 3B tokens.</li>
+      <li><span class="runin"><span class="dom dna">DNA:</span></span> per-base gene annotation (intergenic, intron, exon, coding) in six held-out genera. One run of the recipe, with its fine-tuned snapshots averaged, is worth 8.2–10.7× at 5M–20M and beats a single pass over 2B from 50M on. The scaled-down Evo 2 trained the Evo 2 way levels off and falls below our single pass from 200M.</li>
+      <li><span class="runin"><span class="dom cryst">Crystals:</span></span> three Matbench property tasks (perovskite formation energy, shear and bulk modulus). One fine-tuned snapshot of the recipe is worth 11.1× and 7.0× at 5M and 10M, and from 25M on it fine-tunes as well as or better than a single pass over the whole corpus.</li>
+    </ul>
+
+    <figure id="fig-down">
+      <div class="panel wrap" data-fig="down"></div>
+      <figcaption><span class="fignum">Figure 4.</span> Downstream scores against pretraining tokens, with downstream multipliers on the recipe's points. Molecules: pooled MoleculeNet score (higher is better). DNA: gene-annotation macro-F1. Crystals: mean Matbench MAE divided by the single pass over the whole corpus (lower is better, axis flipped). "&gt;" marks scores beyond the longest single pass.</figcaption>
+    </figure>
+
+    <p>Zero-shot evaluations tell the same story (Table 5). For DNA, our recipe at 50M–200M unique tokens predicts the effect of human ClinVar variants, a species absent from our training data, as well as single-epoch models trained on 13–14× more data; across all models, ClinVar AUROC follows pretraining loss. For crystals, prompted with a composition and sampling one structure, the recipe at 5M–50M matches the true structure as often as single-epoch models trained on 4.9–10.5× more data and CrystaLLM's recipe trained on 15–24× more.</p>
+
+    <figure class="table" id="tab-zeroshot">
+      <figcaption><span class="fignum">Table 5.</span> Zero-shot evaluations. ClinVar: AUROC of the alternative-minus-reference log-likelihood over all single-nucleotide variants. Crystal structure prediction: match rate of the first of 20 samples from a composition prompt on 8,682 held-out compositions (CrystaLLM's protocol). Multipliers: single-epoch data with the same score.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">ClinVar, single pass</th><th class="r">ClinVar, recipe</th><th class="r">×</th><th class="r">structure, single pass</th><th class="r">structure, CrystaLLM recipe</th><th class="r">structure, recipe</th><th class="r">×</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">0.475</td><td class="r">0.486</td><td class="r">—</td><td class="r">0.220</td><td class="r">0.027</td><td class="r hi">0.313</td><td class="r">4.9×</td></tr>
+          <tr><td class="r">10M</td><td class="r">0.477</td><td class="r">0.487</td><td class="r">—</td><td class="r">0.259</td><td class="r">0.169</td><td class="r hi">0.343</td><td class="r">5.4×</td></tr>
+          <tr><td class="r">20M / 25M</td><td class="r">0.479</td><td class="r">0.552</td><td class="r">10.9×</td><td class="r">0.314</td><td class="r">0.244</td><td class="r hi">0.396</td><td class="r">9.6×</td></tr>
+          <tr><td class="r">50M</td><td class="r">0.486</td><td class="r hi">0.652</td><td class="r">13.0×</td><td class="r">0.341</td><td class="r">0.301</td><td class="r hi">0.421</td><td class="r">10.5×</td></tr>
+          <tr><td class="r">100M</td><td class="r">0.499</td><td class="r hi">0.700</td><td class="r">12.8×</td><td class="r">0.368</td><td class="r">0.321</td><td class="r hi">0.433</td><td class="r">&gt;6.9×</td></tr>
+          <tr><td class="r">200M</td><td class="r">0.544</td><td class="r hi">0.733</td><td class="r">14.3×</td><td class="r">0.390</td><td class="r">0.341</td><td class="r hi">0.443</td><td class="r">&gt;3.5×</td></tr>
+          <tr><td class="r note" colspan="8">Longest single pass: ClinVar 0.718 (2B tokens); structure prediction 0.429 (whole corpus, 694M). DNA uses 20M and crystals 25M in the third row. At 5–10M every DNA model is near chance on ClinVar.</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <h2 id="components"><span class="num">7</span>What Makes It Work</h2>
+    <p>At each budget we retrain the best configuration with one component removed; the run without ensembling is the best single snapshot of the full run (Figure 5).</p>
+    <ul>
+      <li><span class="runin">Ensembling helps everywhere.</span> The best single snapshot is worth 3.2–4.1× for molecules and 5.0–9.9× for crystals at 5M–50M, against 5.4–6.2× and 7.4–13.3× for the snapshot average. For DNA it adds 1–2× at every budget except 10M, where the arms are within seed noise.</li>
+      <li><span class="runin">Looping helps everywhere, and more as data grows.</span> Removing it costs molecules 0.45× at 5M and 1.33× at 200M, and DNA 0.9× at 20M and 3.4× at 200M. For crystals it helps at every budget (0.8–2.3×).</li>
+      <li><span class="runin">The extras are domain-specific.</span> Chain distillation adds 0.4–0.6× for molecules at 50M and below, little for DNA, and nothing for crystals. Weight perturbation helps measurably only for crystals at 10M.</li>
+    </ul>
+
+    <figure id="fig-abl">
+      <div class="panel wrap" data-fig="abl"></div>
+      <figcaption><span class="fignum">Figure 5.</span> Leave-one-out ablation: pretraining data multiplier of each arm at each budget (DNA: held-out split, mean of three seeds). Cycles only removes looping and the extras. Shading is per domain. †: extrapolated beyond the longest single pass.</figcaption>
+    </figure>
+
+    <h2 id="conclusion"><span class="num">8</span>Conclusion</h2>
+    <p>In three scientific domains that share almost nothing at the level of tokens, one recipe of snapshot ensembling and looped depth makes a training run worth five to thirteen times its unique data, well above tuned repetition, and needs about twenty times less data than the published training recipes on DNA and crystals. The gain transfers to every downstream task we measured, and in every domain the recipe trained on tens of millions of unique tokens fine-tunes as well as or better than our longest single pass.</p>
+    <p>Three questions remain open. First, how far does the multiplier hold beyond 200M unique tokens, where single-epoch frontiers become capacity-limited and multipliers turn into lower bounds? Second, why does looping help more as data grows? <a class="ref" data-ref="chen">Chen et al.</a> find that in multi-epoch training looping acts as a regulariser and that adding loops becomes compute-optimal as models grow, which suggests scaling the loop count with the budget. Third, which further domains does the recipe transfer to unchanged? We will report more domains in the next parts of this series.</p>
+
+    <h2 id="related-work"><span class="num">9</span>Related Work</h2>
+    <p><span class="runin">Data-constrained training.</span> <a class="ref" data-ref="muennighoff">Muennighoff et al.</a> fit scaling laws for repeated data. <a class="ref" data-ref="baron">Baron et al.</a> showed that dense models with Muon and strong weight decay push multi-epoch training much further for proteins, and named snapshot ensembling and chain distillation as next steps.</p>
+    <p><span class="runin">Hyper-epoch primitives.</span> Snapshot ensembles (<a class="ref" data-ref="huang">Huang et al.</a>) reuse a cyclic schedule (<a class="ref" data-ref="sgdr">Loshchilov and Hutter</a>) to collect many models from one run. Distilling a model into a fresh copy of itself goes back to <a class="ref" data-ref="hinton">Hinton et al.</a> and <a class="ref" data-ref="ban">Furlanello et al.</a>. <a class="ref" data-ref="q0">q0</a> combines these into primitives for hyper-epoch pretraining. Weight-tied depth dates to the Universal Transformer (<a class="ref" data-ref="ut">Dehghani et al.</a>); <a class="ref" data-ref="chen">Chen et al.</a> introduce the boundary operator we use.</p>
+    <p><span class="runin">Scientific language models.</span> <a class="ref" data-ref="xu">Xu et al.</a> study scaling of SMILES language models. Evo 2 (<a class="ref" data-ref="evo2">Brixi et al.</a>) is trained on OpenGenome2, the source of our DNA. CrystaLLM (<a class="ref" data-ref="crystallm">Antunes et al.</a>) generates crystal structures as CIF text. Our downstream tasks come from MoleculeNet (<a class="ref" data-ref="moleculenet">Wu et al.</a>), Matbench (<a class="ref" data-ref="matbench">Dunn et al.</a>) and ClinVar (<a class="ref" data-ref="clinvar">Landrum et al.</a>).</p>
 
     <section class="references" id="references">
       <h2>References</h2>
+      <p class="bibitem" id="ref-crystallm">Antunes, L. M., Butler, K. T., and Grau-Crespo, R. Crystal structure generation with autoregressive large language modeling. Nature Communications, 2024.</p>
       <p class="bibitem" id="ref-baron">Baron, E., Vegesna, A., Dahal, S., and Wilson, A. G. Data-constrained training of protein language models. Q Labs and New York University, 2026.</p>
-      <p class="bibitem" id="ref-bemis">Bemis, G. W. and Murcko, M. A. The properties of known drugs. 1. Molecular frameworks. Journal of Medicinal Chemistry, 1996.</p>
+      <p class="bibitem" id="ref-evo2">Brixi, G., et al. Genome modeling and design across all domains of life with Evo 2. bioRxiv, 2025.</p>
       <p class="bibitem" id="ref-chen">Chen, Z., Vegesna, A., Dahal, S., and Wilson, A. G. How model growth, recursion, and boundary operators influence scaling exponents. arXiv:2609.19107, 2026. <a href="https://arxiv.org/abs/2609.19107" target="_blank" rel="noopener">arxiv.org/abs/2609.19107</a></p>
       <p class="bibitem" id="ref-ut">Dehghani, M., Gouws, S., Vinyals, O., Uszkoreit, J., and Kaiser, Ł. Universal transformers. ICLR, 2019.</p>
-      <p class="bibitem" id="ref-enamine">Enamine. REAL Space: make-on-demand chemical space. 2025. <a href="https://enamine.net/compound-collections/real-compounds/real-space-navigator" target="_blank" rel="noopener">enamine.net</a></p>
+      <p class="bibitem" id="ref-matbench">Dunn, A., Wang, Q., Ganose, A., Dopp, D., and Jain, A. Benchmarking materials property prediction methods: the Matbench test set and Automatminer reference algorithm. npj Computational Materials, 2020.</p>
       <p class="bibitem" id="ref-ban">Furlanello, T., Lipton, Z., Tschannen, M., Itti, L., and Anandkumar, A. Born-again neural networks. ICML, 2018.</p>
       <p class="bibitem" id="ref-hinton">Hinton, G., Vinyals, O., and Dean, J. Distilling the knowledge in a neural network. arXiv:1503.02531, 2015.</p>
-      <p class="bibitem" id="ref-lora">Hu, E. J., Shen, Y., Wallis, P., et al. LoRA: Low-rank adaptation of large language models. ICLR, 2022.</p>
       <p class="bibitem" id="ref-huang">Huang, G., Li, Y., Pleiss, G., Liu, Z., Hopcroft, J. E., and Weinberger, K. Q. Snapshot ensembles: Train 1, get M for free. ICLR, 2017.</p>
-      <p class="bibitem" id="ref-kim">Kim, K., Kotha, S., Liang, P., and Hashimoto, T. Pre-training under infinite compute. arXiv:2509.14786, 2025. <a href="https://arxiv.org/abs/2509.14786" target="_blank" rel="noopener">arxiv.org/abs/2509.14786</a></p>
-      <p class="bibitem" id="ref-pubchem">Kim, S., Chen, J., Cheng, T., et al. PubChem 2025 update. Nucleic Acids Research, 2025.</p>
+      <p class="bibitem" id="ref-clinvar">Landrum, M. J., et al. ClinVar: improving access to variant interpretations and supporting evidence. Nucleic Acids Research, 2018.</p>
       <p class="bibitem" id="ref-sgdr">Loshchilov, I. and Hutter, F. SGDR: Stochastic gradient descent with warm restarts. ICLR, 2017.</p>
       <p class="bibitem" id="ref-q0">Mandal, B., Berman, S., Vegesna, A., and Dahal, S. q0: Primitives for hyper-epoch pretraining. arXiv:2606.03938, 2026. <a href="https://arxiv.org/abs/2606.03938" target="_blank" rel="noopener">arxiv.org/abs/2606.03938</a></p>
       <p class="bibitem" id="ref-muennighoff">Muennighoff, N., Rush, A. M., Barak, B., et al. Scaling data-constrained language models. NeurIPS, 2023.</p>
       <p class="bibitem" id="ref-moleculenet">Wu, Z., Ramsundar, B., Feinberg, E. N., et al. MoleculeNet: A benchmark for molecular machine learning. Chemical Science, 2018.</p>
-      <p class="bibitem" id="ref-xu">Xu, D., Pan, Q., Yuan, S., Li, J., Zhu, Z., and Ji, J. Unveiling scaling behaviors in molecular language models: Effects of model size, data, and representation. arXiv:2601.22757, 2026. <a href="https://arxiv.org/abs/2601.22757" target="_blank" rel="noopener">arxiv.org/abs/2601.22757</a></p>
+      <p class="bibitem" id="ref-xu">Xu et al. arXiv:2601.22757, 2026. <a href="https://arxiv.org/abs/2601.22757" target="_blank" rel="noopener">arxiv.org/abs/2601.22757</a></p>
     </section>
 
     <p class="appendix-start" id="appendix">Appendix</p>
-    <h2 id="appendix-a"><span class="num">A</span>Domain Details</h2>
-    <p><span class="runin">Chemistry (SMILES).</span></p>
-    <p>We pretrain on the SMILES corpora of <a class="ref" data-ref="xu">Xu et al.</a> with their 591-token vocabulary. Every run is scored on the same held-out set, the first 2M tokens of the SMILES-100M validation split, by next-token cross-entropy in nats per token. Whole molecules are packed into 8,192-token rows with a block-diagonal attention mask, so the unique-token count $U$ is exact. Models are pre-LN decoder-only transformers with rotary embeddings and no dropout, on the width and depth ladder of Xu et al. (1.3M to 278M non-embedding parameters). All runs use Muon for matrix parameters and AdamW for embeddings and the output head, with no warmup.</p>
-    <p>The two tuned reference arms in chemistry:</p>
+    <h2 id="appendix-a"><span class="num">A</span>Full Pretraining Results</h2>
+    <figure class="table">
+      <figcaption><span class="fignum">Table A1.</span> <span class="dom chem">Molecules</span>: validation loss (nats per token) and data multiplier, seed 0. The single-epoch frontier continues to 0.5751 at 400M, 0.5694 at 800M and 0.5665 at 1.5B.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">single-epoch</th><th class="r">tuned repetition</th><th class="r">recipe, one run</th><th class="r">− ensembling</th><th class="r">− distillation</th><th class="r">− looping</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">0.7197</td><td class="r">3.00×</td><td class="r hi">0.6295 (5.68×)</td><td class="r">0.6414 (3.98×)</td><td class="r">0.6330 (5.12×)</td><td class="r">0.6322 (5.23×)</td></tr>
+          <tr><td class="r">10M</td><td class="r">0.6745</td><td class="r">2.85×</td><td class="r hi">0.6086 (5.45×)</td><td class="r">0.6175 (4.06×)</td><td class="r">0.6115 (4.87×)</td><td class="r">0.6109 (4.96×)</td></tr>
+          <tr><td class="r">20M</td><td class="r">0.6412</td><td class="r">2.63×</td><td class="r hi">0.5935 (5.44×)</td><td class="r">0.6001 (3.98×)</td><td class="r">0.5955 (4.87×)</td><td class="r">0.5950 (4.97×)</td></tr>
+          <tr><td class="r">50M</td><td class="r">0.6106</td><td class="r">2.67×</td><td class="r hi">0.5799 (5.40×)</td><td class="r">0.5842 (3.84×)</td><td class="r">0.5808 (5.00×)</td><td class="r">0.5813 (4.81×)</td></tr>
+          <tr><td class="r">100M</td><td class="r">0.5949</td><td class="r">2.48×</td><td class="r hi">0.5715 (6.20×)</td><td class="r">0.5757 (3.82×)</td><td class="r">0.5717 (6.08×)</td><td class="r">0.5729 (5.25×)</td></tr>
+          <tr><td class="r">150M</td><td class="r">—</td><td class="r">2.30×</td><td class="r hi">0.5689 (5.95×)</td><td class="r">0.5731 (3.42×)</td><td class="r">0.5689 (5.91×)</td><td class="r">0.5700 (4.98×)</td></tr>
+          <tr><td class="r">200M</td><td class="r">0.5835</td><td class="r">2.08×</td><td class="r hi">0.5676 (5.85×)</td><td class="r">0.5713 (3.19×)</td><td class="r">0.5678 (5.68×)</td><td class="r">0.5688 (4.52×)</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <figure class="table">
+      <figcaption><span class="fignum">Table A2.</span> <span class="dom dna">DNA</span>: loss on OpenGenome2's held-out split (nats per base) and data multiplier. One run: mean of three seeds (range of multipliers over seeds). The single-epoch frontier continues to 1.2445 at 500M, 1.2342 at 1B and 1.2268 at 2B.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">single-epoch</th><th class="r">tuned repetition</th><th class="r">recipe, one run</th><th class="r">Evo 2 recipe</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">1.3172</td><td class="r">1.3039 (3.2×)</td><td class="r hi">1.2983 (5.5×, 4.5–6.3)</td><td class="r">1.3127</td></tr>
+          <tr><td class="r">10M</td><td class="r">1.3116</td><td class="r">1.2906 (5.7×)</td><td class="r hi">1.2814 (7.5×, 7.1–8.1)</td><td class="r">1.3107</td></tr>
+          <tr><td class="r">20M</td><td class="r">1.3002</td><td class="r">1.2768 (4.3×)</td><td class="r hi">1.2625 (8.4×, 8.1–8.5)</td><td class="r">1.3085</td></tr>
+          <tr><td class="r">50M</td><td class="r">1.2946</td><td class="r">1.2612 (3.6×)</td><td class="r hi">1.2463 (8.9×, 8.5–9.2)</td><td class="r">1.3066</td></tr>
+          <tr><td class="r">100M</td><td class="r">1.2723</td><td class="r">1.2532 (2.9×)</td><td class="r hi">1.2376 (7.9×, 7.9–8.0)</td><td class="r">1.3040</td></tr>
+          <tr><td class="r">200M</td><td class="r">1.2590</td><td class="r">1.2420 (3.0×)</td><td class="r hi">1.2282 (8.8×, 7.7–9.5)</td><td class="r">1.2817</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <figure class="table">
+      <figcaption><span class="fignum">Table A3.</span> <span class="dom cryst">Crystals</span>: structure-token loss on 17,349 non-duplicate held-out CIFs (nats per token) and data multiplier. The single-epoch frontier continues to 0.3590 at 400M and 0.3387 at 694M (the whole corpus). "&gt;": below the 694M point, lower bound; in brackets, extrapolated (†).</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">single-epoch</th><th class="r">tuned repetition</th><th class="r">recipe, one run</th><th class="r">CrystaLLM recipe</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">0.4692</td><td class="r">—</td><td class="r hi">0.4162 (7.4×)</td><td class="r">0.5687</td></tr>
+          <tr><td class="r">10M</td><td class="r">0.4484</td><td class="r">—</td><td class="r hi">0.3957 (9.3×)</td><td class="r">0.4951</td></tr>
+          <tr><td class="r">25M</td><td class="r">0.4241</td><td class="r">0.3977 (3.4×)</td><td class="r hi">0.3636 (13.3×)</td><td class="r">0.4562</td></tr>
+          <tr><td class="r">50M</td><td class="r">0.4100</td><td class="r">0.3761 (4.0×)</td><td class="r hi">0.3456 (11.5×)</td><td class="r">0.4318</td></tr>
+          <tr><td class="r">100M</td><td class="r">0.3940</td><td class="r">0.3553 (4.4×)</td><td class="r hi">0.3326 (&gt;6.9×, 8.2×†)</td><td class="r">0.4176</td></tr>
+          <tr><td class="r">200M</td><td class="r">0.3761</td><td class="r">(3.4×)</td><td class="r hi">0.3201 (&gt;3.5×, 5.8×†)</td><td class="r">0.4008</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <h2 id="appendix-b"><span class="num">B</span>More Compute, More Gain: Mixing Runs</h2>
+    <p>Everything in the main text is one training run, so its cost is one run. If more compute is available, the same data can be pushed further: train several runs at a budget and combine them into one predictor. The snapshots of one run are close to each other. Separate runs, with different seeds, weight decay, model shapes, numbers of passes or recipe components, make more different errors, and a mixture can exploit that.</p>
+    <p><span class="runin">Adaptive mixture.</span> Every second (DNA) or fourth (crystals) snapshot of every run at a budget becomes a member $j$ with predictive distribution $p_j$. The mixture predicts $p(x_t) = \sum_j w_{t,j}\, p_j(x_t \mid x_{&lt;t})$. Its weights start from a prior $\pi$ fitted with EM and are updated within each document after every token:</p>
+    <div class="eq"><div class="math">$$w_{t+1,j} = (1-\alpha)\,\frac{w_{t,j}\,p_j(x_t \mid x_{&lt;t})^{\beta}}{\sum_i w_{t,i}\,p_i(x_t \mid x_{&lt;t})^{\beta}} + \alpha\,\pi_j,$$</div><span class="eqno">(B1)</span></div>
+    <p>so members that predict the current document well gain weight, while a fraction $\alpha$ is always pulled back toward the prior. The prior and $(\beta, \alpha)$ are fitted on data that is never scored: on the validation genera for DNA, and by cross-fitting on halves of the held-out CIFs (fit on one half, score the other, both ways round) for crystals. With $\beta = 0$ the mixture is a plain weighted ensemble of runs ("fixed weights").</p>
+
+    <figure class="table">
+      <figcaption><span class="fignum">Table B1.</span> <span class="dom dna">DNA</span>: data multipliers on OpenGenome2's held-out split when the runs at a budget are mixed. Runs: seeds and recipe variants combined. †: extrapolated beyond the frontier's 2B point.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">runs</th><th class="r">one run</th><th class="r">mixture, fixed weights</th><th class="r">mixture, adaptive</th><th class="r">adaptive, on the Evo 2 recipe's curve</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">8</td><td class="r">5.5×</td><td class="r">10.4×</td><td class="r hi">11.5×</td><td class="r">30.8×</td></tr>
+          <tr><td class="r">10M</td><td class="r">8</td><td class="r">7.5×</td><td class="r">9.2×</td><td class="r hi">10.0×</td><td class="r">29.5×</td></tr>
+          <tr><td class="r">20M</td><td class="r">8</td><td class="r">8.4×</td><td class="r">9.3×</td><td class="r hi">10.4×</td><td class="r">27.0×</td></tr>
+          <tr><td class="r">50M</td><td class="r">8</td><td class="r">8.9×</td><td class="r">9.3×</td><td class="r hi">10.8×</td><td class="r">29.0×</td></tr>
+          <tr><td class="r">100M</td><td class="r">11</td><td class="r">7.9×</td><td class="r">8.7×</td><td class="r hi">10.9×</td><td class="r">26.8×†</td></tr>
+          <tr><td class="r">200M</td><td class="r">10</td><td class="r">8.8×</td><td class="r">10.0×</td><td class="r hi">14.0×†</td><td class="r">24.5×†</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <figure class="table">
+      <figcaption><span class="fignum">Table B2.</span> <span class="dom cryst">Crystals</span>: data multipliers on the 17,349 non-duplicate held-out CIFs when the runs at a budget are mixed (cross-fitted). "&gt;": beats a single pass over the whole corpus (lower bound).</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">runs</th><th class="r">one run</th><th class="r">mixture, fixed weights</th><th class="r">mixture, adaptive</th><th class="r">adaptive, on CrystaLLM's recipe curve</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r">91</td><td class="r">7.4×</td><td class="r">8.5×</td><td class="r hi">8.8×</td><td class="r">24.5×</td></tr>
+          <tr><td class="r">10M</td><td class="r">74</td><td class="r">9.3×</td><td class="r">9.8×</td><td class="r hi">10.0×</td><td class="r">25.7×</td></tr>
+          <tr><td class="r">25M</td><td class="r">54</td><td class="r">13.3×</td><td class="r">13.8×</td><td class="r hi">14.3×</td><td class="r">25.5×</td></tr>
+          <tr><td class="r">50M</td><td class="r">42</td><td class="r">11.5×</td><td class="r">11.3×</td><td class="r hi">11.5×</td><td class="r">&gt;13.9×</td></tr>
+          <tr><td class="r">100M</td><td class="r">30</td><td class="r">&gt;6.9×</td><td class="r">&gt;6.9×</td><td class="r hi">&gt;6.9×</td><td class="r">&gt;6.9×</td></tr>
+          <tr><td class="r">200M</td><td class="r">28</td><td class="r">&gt;3.5×</td><td class="r">&gt;3.5×</td><td class="r hi">&gt;3.5×</td><td class="r">&gt;3.5×</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <p><span class="runin">How much more it buys depends on how different the runs are.</span> For DNA, mixing 8–11 runs lifts the multiplier from 5.5–8.9× to 10.0–14.0×, and to 25–31× on the Evo 2 recipe's curve. Most of the gain over the best run comes from the within-document reweighting: with fixed weights the mixture is worth 8.7–10.4×. At 5M–20M even three seeds of any single arm reach 8.4–10.4×; from 50M on, mixtures of looped runs are clearly better than mixtures of non-looped ones. For crystals the mixture adds only 0.7–1.4× at 5M–25M and nothing at 50M, although it pools 28–91 runs. Nearly all of those runs have the same tuned shape and make much the same errors. On CrystaLLM's recipe curve the crystal mixture is worth 24.5–25.7× at 5M–25M. We have not run the cross-fitted mixture for molecules.</p>
+    <p><span class="runin">Cost.</span> A mixture costs the training compute of all its runs, and scoring it means evaluating every member on every token. The gain per extra run falls quickly once the runs stop differing. If compute is spent on more runs, it should go to runs that differ (other seeds, weight decays, shapes, recipe components) rather than to copies of the best configuration.</p>
+
+    <h2 id="appendix-c"><span class="num">C</span>Training Details</h2>
+    <p>The cycle shape (learning rate from its peak to $0.08\times$, weight decay from $0.7\times$ to $1\times$ in anti-phase), the 64 snapshots and the loop count are fixed defaults carried from molecules. Per domain and budget we tune the model size, the number of passes, the peak learning rate and the weight decay. The product of learning rate and weight decay matters most: when it is too small the snapshots memorise the training data, and its optimum falls as the budget grows.</p>
     <ul>
-      <li><span class="runin">Single-epoch frontier.</span> One pass over $U \in \{5, 10, 20, 50, 100, 200, 400, 800, 1500\}$M tokens with a cosine schedule and no weight decay, tuned over model size, learning rate and batch size (16k to 262k tokens). A single pass over 3B tokens with the 278M model reaches 0.568, worse than 1.5B (0.5665): the ladder is capacity-limited there, so the 3B run serves as a fine-tuning reference but not as a frontier point.</li>
-      <li><span class="runin">Tuned multi-epoch.</span> Repeated passes over $U \in \{5, \dots, 200\}$M at a constant learning rate, re-packing every pass and stopping early, tuned over model size, learning rate, weight decay, number of passes and batch size.</li>
+      <li><span class="runin"><span class="dom chem">Molecules.</span></span> An 85M model (12 layers, width 768) for 128 passes, all of them in 64 two-pass cycles. Peak Muon learning rate 0.02 for $U \le 50$M and 0.01 above (AdamW 0.002 for embeddings and the head); batch 16k tokens for $U \le 20$M and 65k above. Weight decay follows $\mathrm{lr}\cdot\mathrm{wd}\cdot(\text{steps per pass}) \approx 1.22$, a weight-decay timescale of about 0.82 passes at every budget. Chain distillation from cycle 9 ($\alpha = 0.45$, $T = 1.2$) with weight perturbation ($\sigma$ from 0.25 to 0.05).</li>
+      <li><span class="runin"><span class="dom dna">DNA.</span></span> A flat learning-rate phase over the first half of training, then 64 cycles; the ensemble is the best prefix of snapshots, chosen on validation. The recipe was assembled one component at a time at 5M and 10M on a 25M model, then carried to larger budgets on an 85M model with a short learning-rate × weight-decay bracket per budget. Core looped twice; chain distillation from cycle 32 ($\alpha = 0.2$ at 5M, 0.7 above). Weight perturbation and distillation from the running ensemble gave nothing.</li>
+      <li><span class="runin"><span class="dom cryst">Crystals.</span></span> A 113M model (1 prelude, 10 core blocks applied three times, 1 coda; about 300M executed parameters per token), batch 16 rows of 1,024 tokens, a flat phase over the first half then 64 cycles, weight perturbation after each snapshot. The number of passes (8–192), learning rate and weight decay were tuned per budget, 52–224 runs per budget. The optimal product of learning rate and weight decay falls from $2\cdot10^{-3}$ at 5M to $3\cdot10^{-5}$ at 200M, and at 5M–10M half the optimum lets the snapshots memorise. Precycle fraction, cycle floors, snapshot count, loop count and perturbation size, each varied once around the defaults, moved the loss by less than 0.0005 except a larger perturbation, which hurt.</li>
     </ul>
-    <figure class="table">
-      <figcaption><span class="fignum">Table A1.</span> Model ladder, same shapes as Xu et al. The hyper-epoch recipe uses the 85M model.</figcaption>
-      <div class="scroll"><table class="tab">
-        <thead><tr><th class="l">model</th><th class="r">layers</th><th class="r">width</th><th class="r">non-embedding parameters</th></tr></thead>
-        <tbody>
-          <tr><td class="l">1M</td><td class="r">4</td><td class="r">160</td><td class="r">1.3M</td></tr>
-          <tr><td class="l">4M</td><td class="r">5</td><td class="r">256</td><td class="r">4.1M</td></tr>
-          <tr><td class="l">16M</td><td class="r">5</td><td class="r">512</td><td class="r">16.1M</td></tr>
-          <tr><td class="l">43M</td><td class="r">6</td><td class="r">768</td><td class="r">43.0M</td></tr>
-          <tr><td class="l">85M</td><td class="r">12</td><td class="r">768</td><td class="r">85.5M</td></tr>
-          <tr><td class="l">152M</td><td class="r">12</td><td class="r">1024</td><td class="r">151.8M</td></tr>
-          <tr><td class="l">278M</td><td class="r">22</td><td class="r">1024</td><td class="r">277.7M</td></tr>
-        </tbody>
-      </table></div>
-    </figure>
-    <figure class="table">
-      <figcaption><span class="fignum">Table A2.</span> Hyper-epoch settings per budget: 128 passes, 64 cycles, peak values, AdamW lr 0.002 for embeddings and head. Steps per pass are approximate because rows are re-packed every pass.</figcaption>
-      <div class="scroll"><table class="tab">
-        <thead><tr><th class="r">$U$</th><th class="r">batch (tokens)</th><th class="r">steps per pass</th><th class="r">Muon lr</th><th class="r">weight decay</th><th class="r">lr · wd · steps</th><th class="r">total steps</th></tr></thead>
-        <tbody>
-          <tr><td class="r">5M</td><td class="r">16k</td><td class="r">305</td><td class="r">0.02</td><td class="r">0.2</td><td class="r">1.22</td><td class="r">38k</td></tr>
-          <tr><td class="r">10M</td><td class="r">16k</td><td class="r">610</td><td class="r">0.02</td><td class="r">0.1</td><td class="r">1.22</td><td class="r">77k</td></tr>
-          <tr><td class="r">20M</td><td class="r">16k</td><td class="r">1,221</td><td class="r">0.02</td><td class="r">0.05</td><td class="r">1.22</td><td class="r">153k</td></tr>
-          <tr><td class="r">50M</td><td class="r">65k</td><td class="r">763</td><td class="r">0.02</td><td class="r">0.1</td><td class="r">1.53</td><td class="r">96k</td></tr>
-          <tr><td class="r">100M</td><td class="r">65k</td><td class="r">1,526</td><td class="r">0.01</td><td class="r">0.08</td><td class="r">1.22</td><td class="r">191k</td></tr>
-          <tr><td class="r">150M</td><td class="r">65k</td><td class="r">2,289</td><td class="r">0.01</td><td class="r">0.053</td><td class="r">1.21</td><td class="r">287k</td></tr>
-          <tr><td class="r">200M</td><td class="r">65k</td><td class="r">3,052</td><td class="r">0.01</td><td class="r">0.04</td><td class="r">1.22</td><td class="r">383k</td></tr>
-        </tbody>
-      </table></div>
-    </figure>
-
-    <h2 id="appendix-b"><span class="num">B</span>Full Results</h2>
-    <figure class="table">
-      <figcaption><span class="fignum">Table B1.</span> Pretraining loss (multiplier) of every hyper-epoch arm, seed 0. Full-recipe multipliers of extra seeds: 5.74 / 5.63 (5M), 5.48 / 5.45 (10M), 5.50 / 5.38 (20M), 5.45 (50M), 5.98 (100M), 5.75 (150M), 5.60 (200M).</figcaption>
-      <div class="scroll"><table class="tab">
-        <thead><tr><th class="r">$U$</th><th class="r">full</th><th class="r">− ensembling</th><th class="r">− distillation</th><th class="r">− looping</th><th class="r">− dist. − loop</th></tr></thead>
-        <tbody>
-          <tr><td class="r">5M</td><td class="r hi">0.6295 (5.68×)</td><td class="r">0.6414 (3.98×)</td><td class="r">0.6330 (5.12×)</td><td class="r">0.6322 (5.23×)</td><td class="r">0.6357 (4.72×)</td></tr>
-          <tr><td class="r">10M</td><td class="r hi">0.6086 (5.45×)</td><td class="r">0.6175 (4.06×)</td><td class="r">0.6115 (4.87×)</td><td class="r">0.6109 (4.96×)</td><td class="r">0.6138 (4.54×)</td></tr>
-          <tr><td class="r">20M</td><td class="r hi">0.5935 (5.44×)</td><td class="r">0.6001 (3.98×)</td><td class="r">0.5955 (4.87×)</td><td class="r">0.5950 (4.97×)</td><td class="r">0.5973 (4.49×)</td></tr>
-          <tr><td class="r">50M</td><td class="r hi">0.5799 (5.40×)</td><td class="r">0.5842 (3.84×)</td><td class="r">0.5808 (5.00×)</td><td class="r">0.5813 (4.81×)</td><td class="r">0.5827 (4.27×)</td></tr>
-          <tr><td class="r">100M</td><td class="r hi">0.5715 (6.20×)</td><td class="r">0.5757 (3.82×)</td><td class="r">0.5717 (6.08×)</td><td class="r">0.5729 (5.25×)</td><td class="r">0.5733 (4.97×)</td></tr>
-          <tr><td class="r">150M</td><td class="r hi">0.5689 (5.95×)</td><td class="r">0.5731 (3.42×)</td><td class="r">0.5689 (5.91×)</td><td class="r">0.5700 (4.98×)</td><td class="r">0.5702 (4.81×)</td></tr>
-          <tr><td class="r">200M</td><td class="r hi">0.5676 (5.85×)</td><td class="r">0.5713 (3.19×)</td><td class="r">0.5678 (5.68×)</td><td class="r">0.5688 (4.52×)</td><td class="r">0.5690 (4.35×)</td></tr>
-        </tbody>
-      </table></div>
-    </figure>
-    <figure class="table">
-      <figcaption><span class="fignum">Table B2.</span> Pooled fine-tuning score ($\ln U$ units of the single-epoch curve) with the fine-tuning multiplier in parentheses. "Beats 3B" means the score is above a single pass over 3B, where only the lower bound 3B / $U$ is stated. The single-epoch reference continues: +6.39 (400M), +6.47 (800M), +6.75 (1.5B), +7.35 (3B).</figcaption>
-      <div class="scroll"><table class="tab">
-        <thead><tr><th class="r">$U$</th><th class="r">single-epoch</th><th class="r">tuned multi-epoch</th><th class="r">full</th><th class="r">− ensembling</th><th class="r">− distillation</th><th class="r">− looping</th></tr></thead>
-        <tbody>
-          <tr><td class="r">5M</td><td class="r">+0.58</td><td class="r">+3.13 (4.1×)</td><td class="r hi">+5.60 (28×)</td><td class="r">+4.22 (6.8×)</td><td class="r">+5.21 (17×)</td><td class="r">+5.46 (24×)</td></tr>
-          <tr><td class="r">10M</td><td class="r">+1.86</td><td class="r">+4.12 (3.3×)</td><td class="r hi">+5.75 (16×)</td><td class="r">+5.03 (5.0×)</td><td class="r">+5.57 (14×)</td><td class="r">+6.13 (27×)</td></tr>
-          <tr><td class="r">20M</td><td class="r">+3.06</td><td class="r">+4.79 (2.2×)</td><td class="r hi">+6.62 (56×)</td><td class="r">+5.89 (9.3×)</td><td class="r">+6.45 (34×)</td><td class="r">+6.70 (68×)</td></tr>
-          <tr><td class="r">50M</td><td class="r">+5.04</td><td class="r">+5.63 (2.9×)</td><td class="r hi">+7.69 (beats 3B)</td><td class="r">+6.67 (25×)</td><td class="r">+7.55 (beats 3B)</td><td class="r">+7.57 (beats 3B)</td></tr>
-          <tr><td class="r">100M</td><td class="r">+5.26</td><td class="r">+5.92 (1.9×)</td><td class="r hi">+8.27 (beats 3B)</td><td class="r">+6.70 (13×)</td><td class="r">+7.79 (beats 3B)</td><td class="r">+7.60 (beats 3B)</td></tr>
-          <tr><td class="r">150M</td><td class="r">—</td><td class="r">+6.32 (2.4×)</td><td class="r hi">+8.48 (beats 3B)</td><td class="r">+7.59 (beats 3B)</td><td class="r">+7.87 (beats 3B)</td><td class="r">+7.26 (18×)</td></tr>
-          <tr><td class="r">200M</td><td class="r">+5.96</td><td class="r">+6.24 (1.6×)</td><td class="r hi">+8.61 (beats 3B)</td><td class="r">+6.99 (10×)</td><td class="r">+8.15 (beats 3B)</td><td class="r">+7.46 (beats 3B)</td></tr>
-        </tbody>
-      </table></div>
-    </figure>
-
-    <figure id="fig-ftmult-appendix">
-      <div class="panel wrap" data-fig="ftmult"></div>
-      <figcaption><span class="fignum">Figure B1.</span> Fine-tuning data multiplier, read from the pooled score on the single-epoch curve. Open triangles mark models that score above a single pass over 3B, where we report only the lower bound 3B / $U$ and never extrapolate.</figcaption>
-    </figure>
-
-    <h2 id="appendix-c"><span class="num">C</span>Individual Property-Prediction Scores</h2>
-    <p>Each value is the mean over ten scaffold splits with 16 averaged sets of predictions per model. ROC-AUC is higher-is-better; RMSE is lower-is-better. These scores show the task-level variation behind the pooled comparisons in Section 7.</p>
-    <figure id="fig-tasks-appendix">
-      <div class="panel wrap" data-fig="tasks"></div>
-      <figcaption><span class="fignum">Figure C1.</span> Per-task fine-tuning, mean over ten scaffold splits. RMSE axes are flipped so up is better on every panel. "Best single snapshot" is the hyper-epoch run without ensembling.</figcaption>
-    </figure>
+    <p>All models are decoder-only transformers trained from scratch with Muon for matrix parameters and AdamW for embeddings and the output head, no warmup and no dropout. Documents are packed whole with a document mask, so the unique-token count $U$ is exact.</p>
   </main>
 </div>
 
-<script id="chem-data" type="application/json">{"MU":[5,10,20,50,100,150,200],"frontier":{"U":[5,10,20,50,100,200,400,800,1500],"loss":[0.7197,0.6745,0.6412,0.6106,0.5949,0.5835,0.5751,0.5694,0.5665]},"me_mult":[3.0,2.85,2.63,2.67,2.48,2.3,2.08],"me_loss":[0.65502,0.62937,0.60945,0.59015,0.58089,0.57689,0.57478],"pre":{"full":{"loss":[0.62951,0.60863,0.59351,0.57986,0.57149,0.56889,0.56765],"mult":[5.67691,5.45363,5.44214,5.40139,6.20216,5.95216,5.84672],"seeds":[[5,1,0.62915,5.73775],[5,2,0.62978,5.63084],[10,1,0.60853,5.47912],[10,2,0.60865,5.45003],[20,1,0.59334,5.49675],[20,2,0.5937,5.37793],[50,1,0.57975,5.44942],[100,1,0.5718,5.97565],[150,1,0.56906,5.74662],[200,1,0.56785,5.60131]]},"single":{"loss":[0.6414,0.61753,0.60007,0.58417,0.57566,0.57306,0.57127],"mult":[3.98317,4.06317,3.97967,3.8397,3.8202,3.41893,3.18636],"seeds":[[5,1,0.6409,4.03627],[5,2,0.64157,3.9691],[10,1,0.61725,4.09669],[10,2,0.61733,4.08749],[20,1,0.59972,4.04148],[20,2,0.59995,4.001],[50,1,0.58428,3.81587],[100,1,0.57617,3.66079],[150,1,0.57346,3.25424],[200,1,0.57173,3.01259]]},"nodist":{"loss":[0.63298,0.61151,0.59552,0.58081,0.57166,0.56892,0.56779],"mult":[5.11688,4.86563,4.86507,4.9953,6.07808,5.91414,5.67583],"seeds":[[5,1,0.63288,5.13185],[5,2,0.63312,5.09423],[10,1,0.61167,4.84287],[10,2,0.61169,4.83927],[20,1,0.59524,4.92542],[20,2,0.59533,4.90556],[50,1,0.58062,5.07514]]},"noloop":{"loss":[0.63224,0.61089,0.59503,0.58126,0.57287,0.56997,0.56884],"mult":[5.23052,4.9565,4.97065,4.81039,5.24565,4.97563,4.51861],"seeds":[[5,1,0.63208,5.25642],[5,2,0.63267,5.16449],[10,1,0.61083,4.96573],[10,2,0.61067,4.98951],[20,1,0.59497,4.98387],[20,2,0.59495,4.98999],[50,1,0.58142,4.75069],[50,2,0.58129,4.79841]]},"neither":{"loss":[0.63569,0.61381,0.59733,0.5827,0.57332,0.57025,0.56902],"mult":[4.71746,4.54132,4.49103,4.27347,4.96601,4.81017,4.34519],"seeds":[[5,1,0.63604,4.66878],[5,2,0.63616,4.6521],[10,1,0.61403,4.51201],[10,2,0.61441,4.46056],[20,1,0.59702,4.55406],[20,2,0.59727,4.50231],[50,1,0.58279,4.24212]]}},"xu":{"D":[100,300,1000,3000],"loss":[0.61914,0.59409,0.5825,0.57353]},"ens":{"5":{"k":[1,2,4,8,16,32,64],"loss":[0.64271,0.63444,0.63144,0.63044,0.62974,0.62952,0.62951]},"10":{"k":[1,2,4,8,16,32,64],"loss":[0.61789,0.61248,0.6101,0.60919,0.60874,0.60866,0.60863]},"20":{"k":[1,2,4,8,16,32,64],"loss":[0.60074,0.59633,0.59463,0.594,0.59359,0.59348,0.59351]},"50":{"k":[1,2,4,8,16,32,64],"loss":[0.58494,0.5819,0.58058,0.58006,0.57983,0.57982,0.57986]},"100":{"k":[1,2,4,8,16,32,64],"loss":[0.57638,0.57363,0.57247,0.57186,0.57154,0.57151,0.57149]},"150":{"k":[1,2,4,8,16,32,64],"loss":[0.57417,0.5713,0.57001,0.56936,0.56905,0.56893,0.56889]},"200":{"k":[1,2,4,8,16,32,64],"loss":[0.57296,0.57056,0.56909,0.56824,0.56788,0.56773,0.56765]}},"ft_ref":{"U":[5,10,20,50,100,200,400,800,1500,3000],"score":[0.58419,1.85983,3.05873,5.04,5.26408,5.95726,6.39001,6.46666,6.7496,7.34857],"mono":[0.58419,1.85983,3.05873,5.04,5.26408,5.95726,6.39001,6.46666,6.7496,7.34857]},"ft":{"full":[5.60487,5.74647,6.6195,7.68607,8.26608,8.4778,8.61161],"single":[4.21803,5.03003,5.88615,6.67317,6.70016,7.58863,6.99463],"nodist":[5.21339,5.56977,6.44827,7.55442,7.78729,7.87478,8.14553],"noloop":[5.4567,6.134,6.70303,7.57267,7.59731,7.25628,7.46374],"neither":[4.9922,5.55346,6.41435,6.9747,7.2211,7.04111,7.13303],"me":[3.13448,4.11927,4.79363,5.62968,5.9208,6.31961,6.23925]},"ft_xu":[4.6979,6.31516,6.67605,7.96944],"ft_mult":{"full":[[28.12053,false],[16.19893,false],[56.17343,false],[60.0,true],[30.0,true],[20.0,true],[15.0,true]],"single":[[6.83764,false],[4.97701,false],[9.31357,false],[25.31479,false],[13.43956,false],[20.0,true],[9.95882,false]],"nodist":[[17.0978,false],[13.57546,false],[33.87124,false],[60.0,true],[30.0,true],[20.0,true],[15.0,true]],"noloop":[[24.24827,false],[26.54424,false],[67.62805,false],[60.0,true],[30.0,true],[17.97424,false],[15.0,true]],"neither":[[9.78137,false],[13.35585,false],[24.9239,false],[38.92716,false],[25.88562,false],[14.01229,false],[11.68878,false]],"me":[[4.1426,false],[3.26617,false],[2.23078,false],[2.88269,false],[1.92839,false],[2.38232,false],[1.57093,false]]},"tasks":{"lipo":{"g":-1,"ref":[0.78547,0.75393,0.72987,0.69577,0.69011,0.68302,0.67412,0.66842,0.66661,0.65089],"full":[0.6912,0.69497,0.66693,0.6472,0.64177,0.63545,0.63288],"single":[0.71162,0.69859,0.68215,0.6646,0.66985,0.65108,0.66409],"xu":[0.70328,0.66558,0.65805,0.6431]},"tox21":{"g":1,"ref":[0.78556,0.78922,0.79783,0.80674,0.80285,0.81214,0.80993,0.81173,0.80757,0.81184],"full":[0.81318,0.81412,0.81167,0.82174,0.82024,0.82204,0.8222],"single":[0.79735,0.80365,0.80889,0.81523,0.80975,0.81312,0.81372],"xu":[0.80011,0.80532,0.80474,0.81427]},"sider":{"g":1,"ref":[0.60186,0.58923,0.59459,0.61569,0.60833,0.62112,0.63193,0.62083,0.64851,0.6501],"full":[0.619,0.62266,0.62009,0.63388,0.64363,0.64491,0.65147],"single":[0.60769,0.6046,0.60824,0.6221,0.63837,0.64185,0.63769],"xu":[0.6001,0.61783,0.61569,0.64712]},"clintox":{"g":1,"ref":[0.88074,0.85731,0.86836,0.88552,0.90427,0.91835,0.92045,0.9123,0.92155,0.93117],"full":[0.92283,0.92556,0.92438,0.93125,0.9356,0.92984,0.93433],"single":[0.90939,0.92058,0.9378,0.92075,0.92779,0.92961,0.92984],"xu":[0.92289,0.9216,0.92643,0.93841]},"esol":{"g":-1,"ref":[0.98726,0.91209,0.94262,0.87426,0.85476,0.85553,0.84421,0.86284,0.83953,0.85118],"full":[0.89892,0.85359,0.88451,0.88275,0.81171,0.83406,0.82356],"single":[0.9175,0.88623,0.9286,0.86699,0.85106,0.85273,0.87067],"xu":[0.93501,0.86,0.85737,0.83717]},"freesolv":{"g":-1,"ref":[3.00021,2.55968,2.47769,2.28072,2.16768,2.17012,2.18364,2.1603,2.17965,2.33317],"full":[2.25244,2.19683,1.97174,1.95828,1.74597,1.72736,1.84806],"single":[2.40056,2.01441,1.92493,2.10711,1.94357,1.74971,1.91133],"xu":[2.19025,2.4002,2.02187,1.94229]},"bbbp":{"g":1,"ref":[0.90671,0.90876,0.92101,0.92088,0.91952,0.92171,0.92927,0.92728,0.92945,0.93201],"full":[0.91506,0.91977,0.92614,0.92635,0.92329,0.92591,0.92683],"single":[0.91483,0.90867,0.92081,0.91536,0.91587,0.92524,0.91796],"xu":[0.92987,0.93054,0.91972,0.93276]},"bace":{"g":1,"ref":[0.85625,0.85354,0.85738,0.86623,0.86173,0.85978,0.86602,0.87261,0.87088,0.86854],"full":[0.87075,0.87178,0.87153,0.86731,0.87639,0.88023,0.87869],"single":[0.87631,0.86176,0.86495,0.86776,0.87427,0.87344,0.87603],"xu":[0.86686,0.87139,0.86826,0.8731]}},"paired":{"rows":["single","nodist","noloop","neither"],"z":[[2.38392,2.32215,1.36977,2.36839,4.75867,1.6634,2.55761],[1.25975,0.94812,0.20803,0.20923,1.47078,2.09238,1.22236],[0.67559,-0.28389,-0.36484,0.04506,1.25017,3.53586,2.61922],[1.01965,0.87215,0.43639,1.04006,2.09434,2.56093,2.48308]]}}</script>
+<script id="xd-data" type="application/json">{"chem":{"U":[5,10,20,50,100,150,200],"se":{"U":[5,10,20,50,100,200,400,800,1500],"loss":[0.7197,0.6745,0.6412,0.6106,0.5949,0.5835,0.5751,0.5694,0.5665]},"me":{"U":[5,10,20,50,100,150,200],"loss":[0.655,0.6294,0.6095,0.5901,0.5809,0.5769,0.5748],"x":[3.0,2.85,2.63,2.67,2.48,2.3,2.08]},"one":{"U":[5,10,20,50,100,150,200],"loss":[0.6295,0.6086,0.5935,0.5799,0.5715,0.5689,0.5676],"x":[5.68,5.45,5.44,5.4,6.2,5.95,5.85]},"ext":{"name":"Xu et al., released (one pass)","U":[146.5,439,1460,4400],"loss":[0.6191,0.5941,0.5825,0.5735]},"abl":{"full":[5.68,5.45,5.44,5.4,6.2,5.95,5.85],"single":[3.98,4.06,3.98,3.84,3.82,3.42,3.19],"nodist":[5.12,4.87,4.87,5.0,6.08,5.91,5.68],"noloop":[5.23,4.96,4.97,4.81,5.25,4.98,4.52],"neither":[4.72,4.54,4.49,4.27,4.97,4.81,4.35]},"ft":{"refU":[5,10,20,50,100,200,400,800,1500,3000],"ref":[0.584,1.86,3.059,5.04,5.264,5.957,6.39,6.467,6.75,7.349],"U":[5,10,20,50,100,150,200],"one":[5.605,5.746,6.62,7.686,8.266,8.478,8.612],"extU":[146.5,439,1460,4400],"ext":[4.698,6.315,6.676,7.969],"me":[3.134,4.119,4.794,5.63,5.921,6.32,6.239]}},"dna":{"U":[5,10,20,50,100,200],"se":{"U":[5,10,20,50,100,200,500,1000,2000],"loss":[1.3172,1.3116,1.3002,1.2946,1.2723,1.259,1.2445,1.2342,1.2268]},"me":{"U":[5,10,20,50,100,200],"loss":[1.3039,1.2906,1.2768,1.2612,1.2532,1.242],"x":[3.18,5.68,4.34,3.58,2.9,2.96]},"one":{"U":[5,10,20,50,100,200],"loss":[1.2983,1.2814,1.2625,1.2463,1.2376,1.2282],"x":[5.5,7.5,8.4,8.9,7.9,8.8]},"mix":{"U":[5,10,20,50,100,200],"loss":[1.2902,1.2724,1.2584,1.2433,1.2332,1.2233],"x":[11.5,10.0,10.4,10.8,10.9,14.0]},"ext":{"name":"Evo 2 recipe (scaled-down Evo 2, one pass)","U":[5,10,20,50,100,200,500,1000,2000],"loss":[1.3127,1.3107,1.3085,1.3066,1.304,1.2817,1.2596,1.2494,1.238]},"abl":{"single":[3.8,7.5,6.4,7.9,6.9,7.5],"neither":[5.7,6.7,7.5,6.4,5.7,5.5],"nodist":[5.5,7.1,8.0,8.8,7.8,8.8],"noloop":[5.5,7.5,7.5,6.7,5.7,5.4],"full":[5.5,7.5,8.4,8.9,7.9,8.8]},"genes":{"seU":[5,10,20,50,100,200,500,1000,2000],"se":[0.464,0.506,0.501,0.542,0.552,0.57,0.592,0.604,0.623],"U":[5,10,20,50,100,200],"one16":[0.534,0.553,0.572,0.624,0.634,0.652],"onesnap":[0.513,0.535,0.558,0.603,0.616,0.634],"ext":[0.527,0.541,0.539,0.555,0.558,0.563,0.557,0.576,0.588],"rand":0.461,"x":[8.2,10.4,10.7,">40",">20",">10"]},"clinvar":{"seU":[5,10,20,50,100,200,500,1000,2000],"se":[0.475,0.477,0.479,0.486,0.499,0.544,0.629,0.689,0.718],"U":[5,10,20,50,100,200],"one":[0.486,0.487,0.552,0.652,0.7,0.733],"x":[null,null,10.9,13.0,12.8,14.3]}},"crystal":{"U":[5,10,25,50,100,200],"se":{"U":[5.0,10.0,25.0,50.0,100.0,200.0,400.0,694],"loss":[0.4692,0.4484,0.4241,0.41,0.394,0.3761,0.359,0.3387]},"me":{"U":[25,50,100,200],"loss":[0.3977,0.3761,0.3553,0.3394],"x":[3.4,4.0,4.4,3.4]},"one":{"U":[5,10,25,50,100,200],"loss":[0.4162,0.3957,0.3636,0.3456,0.3326,0.3201],"x":[7.4,9.3,13.3,11.5,">6.9",">3.5"]},"mix":{"U":[5,10,25,50,100,200],"loss":[0.4127,0.394,0.3618,0.3457,0.33,0.3171],"x":[8.8,10.0,14.3,11.5,">6.9",">3.5"]},"ext":{"name":"CrystaLLM recipe (one pass)","U":[5,10,25,50,100,200,400,694],"loss":[0.5687,0.4951,0.4562,0.4318,0.4176,0.4008,0.382,0.358]},"abl":{"full":[7.4,9.3,13.3,11.5,8.2,5.8],"single":[5.0,6.2,9.9,9.3,6.7,4.5],"noloop":[6.6,7.6,10.9,9.8,7.4,5.0],"nopert":[7.7,8.3,13.6,11.2,8.3,5.6],"neither":[6.3,7.0,null,null,null,null]},"zs":{"U":[5,10,25,50,100,200,400,694],"se":[0.22,0.259,0.314,0.341,0.368,0.39,0.412,0.429],"ext":[0.027,0.169,0.244,0.301,0.321,0.341,0.382,0.401],"oneU":[5,10,25,50,100,200],"one":[0.313,0.343,0.396,0.421,0.433,0.443],"x":["4.9","5.4","9.6","10.5",">6.9",">3.5"]},"mb":{"U":[5,10,25,50,100,200,400,694],"se":[1.311,1.233,1.148,1.11,1.055,1.039,1.031,1.0],"oneU":[5,10,25,50,100,200],"one":[1.102,1.084,0.999,0.958,0.921,0.917],"x":["11.1","7.0",">27.8",">13.9",">6.9",">3.5"]}}}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <script>
 (() => {
-  const D = JSON.parse(document.getElementById('chem-data').textContent);
-  const C = { full: '#2a78d6', single: '#eb6834', nodist: '#1baf7a', noloop: '#eda100', neither: '#e87ba4',
-              xu: '#008300', ref: '#0f172a', me: '#a9b2be', ink: '#0f172a', muted: '#64748b', rule: '#dde3ec' };
-  const LAB = { full: 'Hyper-epoch (full recipe)', single: 'Best single snapshot (− ensembling)', nodist: '− distillation',
-                noloop: '− looping', neither: '− distillation − looping', me: 'Tuned multi-epoch', ref: 'Single-epoch frontier',
-                xu: 'Xu et al., released' };
-  const MU = D.MU;
-  const tok = v => v >= 1000 ? (v / 1000) + 'B' : v + 'M';
-  const f2 = v => v.toFixed(2), f4 = v => v.toFixed(4);
-
-  // single-epoch frontier inversion (Eq. 1), identical to hq_report.pmult
-  const SU = D.frontier.U, SL = D.frontier.loss;
-  const pmult = (Lv, U) => {
-    let i = SU.length - 2;
-    for (let j = 0; j < SU.length - 1; j++) if (SL[j + 1] <= Lv && Lv <= SL[j]) { i = j; break; }
-    if (Lv > SL[0]) i = 0;
-    const f = (SL[i] - Lv) / (SL[i] - SL[i + 1]);
-    return Math.exp(Math.log(SU[i]) + f * Math.log(SU[i + 1] / SU[i])) / U;
-  };
+  const D = JSON.parse(document.getElementById('xd-data').textContent);
+  const C = { chem: '#2a78d6', dna: '#eb6834', cryst: '#1baf7a', ref: '#0f172a', me: '#a9b2be', ext: '#475569', muted: '#64748b' };
+  const DOM = { chem: 'Molecules (SMILES)', dna: 'Eukaryotic DNA', cryst: 'Crystals (CIF)' };
+  const tok = v => v >= 1000 ? (+(v / 1000).toFixed(2)) + 'B' : (+v.toFixed(1)) + 'M';
+  const xs = v => (typeof v === 'string' ? v : Number.isInteger(v) ? String(v) : (+v).toFixed(1)) + '×';
 
   /* ---------- tiny SVG chart kit ---------- */
-  const scale = (dom, rng, log) => {
-    const f = log ? Math.log : (x => x), a = f(dom[0]), b = f(dom[1]);
-    return v => rng[0] + (f(v) - a) / (b - a) * (rng[1] - rng[0]);
-  };
+  const scale = (dom, rng, log) => { const f = log ? Math.log : (x => x), a = f(dom[0]), b = f(dom[1]); return v => rng[0] + (f(v) - a) / (b - a) * (rng[1] - rng[0]); };
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const mark = (type, x, y, c, s, hollow, k) => {
-    const fill = hollow ? '#ffffff' : c, st = hollow ? `stroke="${c}" stroke-width="1.6"` : 'class="pt"';
-    const dk = k ? ` data-k="${k}"` : '';
+    const fill = hollow ? '#ffffff' : c, st = hollow ? `stroke="${c}" stroke-width="1.6"` : 'class="pt"', dk = k ? ` data-k="${k}"` : '';
     if (type === 'square') return `<rect ${st}${dk} x="${x - s * .85}" y="${y - s * .85}" width="${s * 1.7}" height="${s * 1.7}" rx="1.2" fill="${fill}"/>`;
     if (type === 'tri') { const h = s * 1.25; return `<path ${st}${dk} d="M${x} ${y - h} L${x + h} ${y + h * .75} L${x - h} ${y + h * .75} Z" fill="${fill}"/>`; }
-    if (type === 'diamond') { const h = s * 1.2; return `<path ${st}${dk} d="M${x} ${y - h} L${x + h} ${y} L${x} ${y + h} L${x - h} ${y} Z" fill="${fill}"/>`; }
-    if (type === 'star') {
-      let d = ''; for (let i = 0; i < 10; i++) { const r = i % 2 ? s * .62 : s * 1.55, a = -Math.PI / 2 + i * Math.PI / 5; d += (i ? 'L' : 'M') + (x + r * Math.cos(a)).toFixed(1) + ' ' + (y + r * Math.sin(a)).toFixed(1); }
-      return `<path ${st}${dk} d="${d}Z" fill="${fill}"/>`;
-    }
+    if (type === 'star') { let d = ''; for (let i = 0; i < 10; i++) { const r = i % 2 ? s * .62 : s * 1.55, a = -Math.PI / 2 + i * Math.PI / 5; d += (i ? 'L' : 'M') + (x + r * Math.cos(a)).toFixed(1) + ' ' + (y + r * Math.sin(a)).toFixed(1); } return `<path ${st}${dk} d="${d}Z" fill="${fill}"/>`; }
     return `<circle ${st}${dk} cx="${x}" cy="${y}" r="${s}" fill="${fill}"/>`;
   };
-  const swatch = (s) => {
+  const swatch = s => {
     const dash = s.dash ? ` stroke-dasharray="${s.dash}"` : '';
     const line = s.noLine ? '' : `<line x1="1" x2="25" y1="7" y2="7" stroke="${s.color}" stroke-width="${s.width || 2}"${dash} stroke-linecap="round"/>`;
     return `<svg width="26" height="14" aria-hidden="true">${line}${s.marker === 'none' ? '' : mark(s.marker || 'circle', 13, 7, s.color, s.marker === 'star' ? 4.2 : 3.6, s.hollowLegend)}</svg>`;
   };
-  const legend = series => '<div class="legend">' + series.filter(s => !s.noLegend).map(s =>
-    `<span class="it" data-k="${s.k}">${swatch(s)}${esc(s.label)}</span>`).join('') + '</div>';
-
+  const legend = series => '<div class="legend">' + series.map(s => `<span class="it" data-k="${s.k}">${swatch(s)}${esc(s.label)}</span>`).join('') + '</div>';
   function plot(o) {
     const W = o.w || 760, H = o.h || 400, m = Object.assign({ l: 54, r: 24, t: 34, b: 46 }, o.m || {});
     const X = scale(o.x.dom, [m.l, W - m.r], o.x.log), Y = scale(o.y.dom, [H - m.b, m.t], o.y.log);
     let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}">`;
-    if (o.title) s += `<text class="title" x="6" y="16">${esc(o.title)}</text>`;
+    if (o.title) s += `<text class="title" x="6" y="16"${o.titleColor ? ` style="fill:${o.titleColor}"` : ''}>${esc(o.title)}</text>`;
     s += `<text x="6" y="${o.title ? 32 : 16}">${esc(o.y.label)}</text>`;
-    (o.bands || []).forEach(b => { const y1 = Y(b.y1), y0 = Y(b.y0); s += `<rect x="${m.l}" y="${Math.min(y0, y1)}" width="${W - m.r - m.l}" height="${Math.abs(y1 - y0)}" fill="${b.fill}"/>`;
-      if (b.label) s += `<text class="note" x="${W - m.r - 6}" y="${Math.min(y0, y1) + 14}" text-anchor="end">${esc(b.label)}</text>`; });
-    o.y.ticks.forEach(v => { const y = Y(v); s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}"/><text x="${m.l - 8}" y="${y}" dy="0.35em" text-anchor="end">${o.y.fmt ? o.y.fmt(v) : v}</text>`; });
+    (o.bands || []).forEach(b => { const y1 = Y(b.y1), y0 = Y(b.y0); s += `<rect x="${m.l}" y="${Math.min(y0, y1)}" width="${W - m.r - m.l}" height="${Math.abs(y1 - y0)}" fill="${b.fill}"/>`; });
+    o.y.ticks.forEach(v => { const y = Y(v); s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}"/><text x="${m.l - 7}" y="${y}" dy="0.35em" text-anchor="end">${o.y.fmt ? o.y.fmt(v) : v}</text>`; });
     s += `<line class="base" x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}"/>`;
     o.x.ticks.forEach(v => { const x = X(v); s += `<line class="base" x1="${x}" x2="${x}" y1="${H - m.b}" y2="${H - m.b + 4}"/><text x="${x}" y="${H - m.b + 18}" text-anchor="middle">${o.x.fmt ? o.x.fmt(v) : v}</text>`; });
     if (o.x.label) s += `<text x="${(m.l + W - m.r) / 2}" y="${H - 6}" text-anchor="middle">${esc(o.x.label)}</text>`;
     (o.hlines || []).forEach(h => { const y = Y(h.y); s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}" stroke="${h.color || '#94a3b8'}" stroke-width="1.2" stroke-dasharray="${h.dash || '0.1 4.5'}" stroke-linecap="round"/>`;
-      if (h.label) s += `<text class="note" x="${h.lx ? X(h.lx) : m.l + 6}" y="${y - 5}">${esc(h.label)}</text>`; });
-    if (o.pre) s += o.pre(X, Y);
+      if (h.label) s += `<text class="note" x="${h.lx ? X(h.lx) : m.l + 6}" y="${y + (h.below ? 14 : -5)}">${esc(h.label)}</text>`; });
     const hits = [];
     o.series.forEach(se => {
       const pts = se.pts.filter(p => p && p[1] != null);
@@ -548,21 +546,17 @@
         hits.push(`<path class="hitl" data-k="${se.k}" d="${d}"/>`);
       }
       pts.forEach(p => {
-        const x = X(p[0]), y = Y(p[1]), hollow = p[3] && p[3].hollow, sz = (p[3] && p[3].size) || se.size || 3.6;
-        if (se.marker !== 'none') s += mark((p[3] && p[3].marker) || se.marker || 'circle', x, y, se.color, sz, hollow, se.k);
-        const v = (p[2] != null) ? p[2] : '';
-        if (v !== '') hits.push(`<circle class="hitc" data-k="${se.k}" data-v="${esc(v)}" data-x="${x}" data-y="${y - 12}" cx="${x}" cy="${y}" r="9"/>`);
+        const x = X(p[0]), y = Y(p[1]), o3 = p[3] || {}, sz = o3.size || se.size || 3.6;
+        if (se.marker !== 'none') s += mark(o3.marker || se.marker || 'circle', x, y, se.color, sz, o3.hollow || se.hollow, se.k);
+        if (o3.lab) s += `<text class="anno" data-k="${se.k}" x="${x + (o3.ldx || 0)}" y="${y + (o3.ldy != null ? o3.ldy : -9)}" text-anchor="${o3.la || 'middle'}" style="font-size:${o.labSize || 11.5}px">${esc(o3.lab)}</text>`;
+        if (p[2] != null) hits.push(`<circle class="hitc" data-k="${se.k}" data-v="${esc(p[2])}" data-x="${x}" data-y="${y - 12}" cx="${x}" cy="${y}" r="9"/>`);
       });
     });
     if (o.post) s += o.post(X, Y);
-    s += hits.join('') + `<text class="readout" visibility="hidden" text-anchor="middle"></text></svg>`;
-    return s;
+    return s + hits.join('') + `<text class="readout" visibility="hidden" text-anchor="middle"></text></svg>`;
   }
-
-  // hover: highlight a series, show the value at a point (pattern of the house template)
   function wire(root) {
-    const clear = () => { root.classList.remove('hot'); root.querySelectorAll('.on').forEach(n => n.classList.remove('on'));
-      root.querySelectorAll('.readout').forEach(r => r.setAttribute('visibility', 'hidden')); };
+    const clear = () => { root.classList.remove('hot'); root.querySelectorAll('.on').forEach(n => n.classList.remove('on')); root.querySelectorAll('.readout').forEach(r => r.setAttribute('visibility', 'hidden')); };
     const show = n => {
       clear(); root.classList.add('hot');
       root.querySelectorAll(`[data-k="${n.getAttribute('data-k')}"]`).forEach(m => m.classList.add('on'));
@@ -570,8 +564,7 @@
         const svg = n.ownerSVGElement, r = svg.querySelector('.readout'), w = svg.viewBox.baseVal.width;
         r.textContent = n.getAttribute('data-v');
         let half = 50; try { half = Math.max(half, r.getComputedTextLength() / 2 + 6); } catch (e) {}
-        r.setAttribute('x', Math.max(half, Math.min(w - half, +n.getAttribute('data-x'))));
-        r.setAttribute('y', n.getAttribute('data-y')); r.setAttribute('visibility', 'visible');
+        r.setAttribute('x', Math.max(half, Math.min(w - half, +n.getAttribute('data-x')))); r.setAttribute('y', n.getAttribute('data-y')); r.setAttribute('visibility', 'visible');
       }
     };
     const hit = ev => { const n = ev.target.closest ? ev.target.closest('[data-k]') : null; return n && root.contains(n) ? n : null; };
@@ -579,206 +572,120 @@
     root.addEventListener('pointerleave', clear);
     root.addEventListener('click', ev => { const n = hit(ev); if (n) show(n); else clear(); });
   }
-
+  const zip = (U, Y, f) => U.map((u, i) => [u, Y[i], f ? f(u, Y[i], i) : null]);
   const fig = {};
-  const xTok = { log: true, fmt: tok };
+  const SM = { w: 300, h: 300, m: { l: 46, r: 14, t: 42, b: 40 } };
 
-  /* Figure 1: loss vs unique tokens */
-  fig.loss = () => {
-    const front = { k: 'ref', label: LAB.ref, color: C.ref, width: 2, size: 3.2, pts: SU.map((u, i) => [u, SL[i], `${tok(u)} single pass: ${f4(SL[i])}`]) };
-    const me = { k: 'me', label: LAB.me, color: C.me, dash: '6 4.5', width: 1.8, size: 3.2, pts: MU.map((u, i) => [u, D.me_loss[i], `Tuned multi-epoch ${tok(u)}: ${D.me_mult[i].toFixed(2)}×`]) };
-    const full = { k: 'full', label: LAB.full, color: C.full, width: 2.6, size: 4.2, pts: MU.map((u, i) => [u, D.pre.full.loss[i], `Hyper-epoch ${tok(u)}: ${f4(D.pre.full.loss[i])} (${f2(D.pre.full.mult[i])}×)`])
-      .concat(D.pre.full.seeds.map(s => [s[0] * 1.07, s[2], `seed ${s[1]}, ${tok(s[0])}: ${f4(s[2])}`, { size: 2.4 }])) };
-    full.pts.sort((a, b) => a[0] - b[0]);
-    const lineFull = { ...full, pts: full.pts.filter(p => !p[3]), noLegend: true };
-    const seedsFull = { ...full, k: 'full', pts: full.pts.filter(p => p[3]), noLine: true, noLegend: true };
-    const xu = { k: 'xu', label: LAB.xu, color: C.xu, marker: 'star', size: 4.4, dash: '0.1 4.5', width: 1.6, pts: D.xu.D.map((u, i) => [u, D.xu.loss[i], `Xu et al. ${tok(u)}: ${f4(D.xu.loss[i])}`]) };
-    const series = [front, me, { ...full, pts: [] }, xu];
-    return legend(series) + '<div class="plot">' + plot({
-      aria: 'Validation loss against unique pretraining tokens', w: 760, h: 410,
-      x: { ...xTok, dom: [4, 3600], ticks: [5, 10, 20, 50, 100, 200, 500, 1000, 3000], label: 'Unique pretraining tokens U (Xu et al.: tokens seen once)' },
-      y: { dom: [0.555, 0.73], ticks: [0.56, 0.58, 0.60, 0.62, 0.64, 0.66, 0.68, 0.70, 0.72], fmt: v => v.toFixed(2), label: 'Validation loss (nats/token)' },
-      series: [front, me, xu, lineFull, seedsFull],
-      post: (X, Y) => {
-        const y = Y(0.5676), x0 = X(200) + 8, x1 = X(200 * 5.85) - 6;
-        return `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="${C.full}" stroke-width="1.3" stroke-dasharray="4 3"/>` +
-          `<path d="M${x1} ${y} l-7 -4 v8 z" fill="${C.full}"/>` +
-          `<text class="anno" x="${(x0 + x1) / 2}" y="${y + 18}" text-anchor="middle">200M unique ≈ 1.2B seen once</text>`;
-      }
-    }) + '</div>';
-  };
-
-  /* multiplier vs U (not shown in the post) */
-  fig.mult = () => {
-    const full = { k: 'full', label: LAB.full, color: C.full, width: 2.6, size: 4.2, pts: MU.map((u, i) => [u, D.pre.full.mult[i], `Hyper-epoch ${tok(u)}: ${f2(D.pre.full.mult[i])}×`]) };
-    const seeds = { k: 'full', noLine: true, noLegend: true, color: C.full, pts: D.pre.full.seeds.map(s => [s[0] * 1.07, s[3], `seed ${s[1]}, ${tok(s[0])}: ${f2(s[3])}×`, { size: 2.4 }]) };
-    const me = { k: 'me', label: LAB.me, color: C.me, dash: '6 4.5', width: 1.8, size: 3.4, pts: MU.map((u, i) => [u, D.me_mult[i], `Tuned multi-epoch ${tok(u)}: ${f2(D.me_mult[i])}×`]) };
-    return legend([full, me]) + '<div class="plot">' + plot({
-      aria: 'Data multiplier against unique tokens', w: 760, h: 360,
-      x: { ...xTok, dom: [4.2, 240], ticks: MU, label: 'Unique pretraining tokens U' },
-      y: { dom: [0, 7], ticks: [0, 1, 2, 3, 4, 5, 6, 7], fmt: v => v + '×', label: 'Data multiplier' },
-      hlines: [{ y: 1, label: 'single pass (1×)', color: C.ref, lx: 4.4 }],
-      series: [me, full, seeds],
-      post: (X, Y) => `<text class="anno" x="${X(200) + 10}" y="${Y(5.85)}" dy="0.35em">${f2(5.85)}×</text><text class="anno" x="${X(200) + 10}" y="${Y(2.08)}" dy="0.35em">2.08×</text>`
-    }) + '</div>';
-  };
-
-  /* Figure 5: pooled fine-tuning score */
-  fig.ftpooled = () => {
-    const R = D.ft_ref;
-    const ref = { k: 'ref', label: 'Single-epoch reference', color: C.ref, width: 2, size: 3.2, pts: R.U.map((u, i) => [u, R.score[i], `Single pass ${tok(u)}: ${R.score[i] >= 0 ? '+' : ''}${f2(R.score[i])}`]) };
-    const full = { k: 'full', label: LAB.full, color: C.full, width: 2.6, size: 4.2, pts: MU.map((u, i) => [u, D.ft.full[i], `Hyper-epoch ${tok(u)}: +${f2(D.ft.full[i])}`]) };
-    const me = { k: 'me', label: LAB.me, color: C.me, dash: '6 4.5', width: 1.8, size: 3.2, pts: MU.map((u, i) => [u, D.ft.me[i], `Tuned multi-epoch ${tok(u)}: +${f2(D.ft.me[i])}`]) };
-    const xu = { k: 'xu', label: LAB.xu, color: C.xu, marker: 'star', size: 4.4, dash: '0.1 4.5', width: 1.6, pts: D.xu.D.map((u, i) => [u, D.ft_xu[i], `Xu et al. ${tok(u)}: +${f2(D.ft_xu[i])}`]) };
-    const y3 = R.score[R.score.length - 1];
-    return legend([ref, full, me, xu]) + '<div class="plot">' + plot({
-      aria: 'Pooled fine-tuning score against pretraining tokens', w: 760, h: 400,
-      x: { ...xTok, dom: [4, 3600], ticks: [5, 10, 20, 50, 100, 200, 500, 1000, 3000], label: 'Pretraining tokens (unique U; Xu et al.: tokens seen once)' },
-      y: { dom: [0, 9.2], ticks: [0, 2, 4, 6, 8], fmt: v => (v > 0 ? '+' : '') + v, label: 'Pooled fine-tuning score (ln U units, higher is better)' },
-      bands: [{ y0: y3, y1: 9.2, fill: '#e4eefb', label: 'better than a single pass over 3B' }],
-      hlines: [{ y: y3, label: 'single pass, 3B', color: C.ref, lx: 4.4 }],
-      series: [me, ref, xu, full]
-    }) + '</div>';
-  };
-
-  /* Figure B1: fine-tuning multiplier */
-  fig.ftmult = () => {
-    const mk = (k, arr, color, extra) => ({ k, label: LAB[k], color, width: k === 'full' ? 2.6 : 1.8, size: k === 'full' ? 4.2 : 3.4, ...extra,
-      pts: MU.map((u, i) => [u, arr[i][0], `${LAB[k]} ${tok(u)}: ${arr[i][1] ? 'beats 3B, ≥ ' + arr[i][0].toFixed(0) + '×' : arr[i][0].toFixed(1) + '×'}`, arr[i][1] ? { hollow: true, marker: 'tri', size: 4.6 } : null]) });
-    const full = mk('full', D.ft_mult.full, C.full), single = mk('single', D.ft_mult.single, C.single, { marker: 'square' }), me = mk('me', D.ft_mult.me, C.me, { dash: '6 4.5' });
-    const lb = { k: 'lb', label: 'beats single-pass 3B (lower bound 3B / U)', color: C.muted, noLine: true, marker: 'tri', hollowLegend: true, pts: [] };
-    return legend([full, single, me, lb]) + '<div class="plot">' + plot({
-      aria: 'Fine-tuning data multiplier against unique tokens', w: 760, h: 380,
-      x: { ...xTok, dom: [4.2, 240], ticks: MU, label: 'Unique pretraining tokens U' },
-      y: { log: true, dom: [1, 100], ticks: [1, 2, 5, 10, 20, 50, 100], fmt: v => v + '×', label: 'Fine-tuning data multiplier (log scale)' },
-      series: [me, single, full]
-    }) + '</div>';
-  };
-
-  /* Figure C1: per-task small multiples */
-  const TNAME = { lipo: 'Lipophilicity', tox21: 'Tox21', sider: 'SIDER', clintox: 'ClinTox', esol: 'ESOL', freesolv: 'FreeSolv', bbbp: 'BBBP', bace: 'BACE' };
-  const niceTicks = (lo, hi, n) => {
-    const span = hi - lo, step0 = span / n, p = Math.pow(10, Math.floor(Math.log10(step0)));
-    const step = [1, 2, 2.5, 5, 10].map(s => s * p).find(s => s >= step0);
-    const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6)); return out;
-  };
-  fig.tasks = () => {
-    const keys = Object.keys(D.tasks);
-    const series = [{ k: 'ref', label: 'Single-epoch reference', color: C.ref }, { k: 'full', label: LAB.full, color: C.full },
-                    { k: 'single', label: 'Best single snapshot', color: C.single, marker: 'square' }, { k: 'xu', label: LAB.xu, color: C.xu, marker: 'star', dash: '0.1 4.5' }];
-    let s = legend(series) + '<div class="multiples">';
-    keys.forEach(t => {
-      const T = D.tasks[t], rmse = T.g < 0;
-      const all = [...T.ref, ...T.full, ...T.single, ...T.xu], lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * .08;
-      const ticks = niceTicks(lo - pad, hi + pad, 3), dec = ticks.length > 1 && (ticks[1] - ticks[0]) < .05 ? 3 : 2;
-      const dom = rmse ? [hi + pad, lo - pad] : [lo - pad, hi + pad];
-      const fv = v => v.toFixed(3);
-      s += '<div class="plot small">' + plot({
-        aria: `${TNAME[t]} fine-tuning`, w: 260, h: 210, m: { l: 42, r: 10, t: 40, b: 30 }, title: TNAME[t],
-        x: { log: true, dom: [4, 3600], ticks: [5, 50, 500, 3000], fmt: tok },
-        y: { dom, ticks, fmt: v => v.toFixed(dec), label: rmse ? 'RMSE ↓ (flipped)' : 'ROC-AUC' },
-        series: [
-          { k: 'ref', color: C.ref, width: 1.6, size: 2.4, pts: D.ft_ref.U.map((u, i) => [u, T.ref[i], `Single pass ${tok(u)}: ${fv(T.ref[i])}`]) },
-          { k: 'xu', color: C.xu, marker: 'star', size: 3.4, width: 1.3, dash: '0.1 4', pts: D.xu.D.map((u, i) => [u, T.xu[i], `Xu ${tok(u)}: ${fv(T.xu[i])}`]) },
-          { k: 'single', color: C.single, marker: 'square', size: 2.4, width: 1.4, pts: MU.map((u, i) => [u, T.single[i], `Single snapshot ${tok(u)}: ${fv(T.single[i])}`]) },
-          { k: 'full', color: C.full, width: 2, size: 2.8, pts: MU.map((u, i) => [u, T.full[i], `Hyper-epoch ${tok(u)}: ${fv(T.full[i])}`]) }
-        ]
-      }) + '</div>';
-    });
+  /* Figure 2: pretraining loss, one panel per domain */
+  fig.pre = () => {
+    const spec = {
+      chem: { d: D.chem, x: [4, 5200], xt: [5, 50, 500, 4400], y: [0.555, 0.73], yt: [0.56, 0.60, 0.64, 0.68, 0.72], f: 2, skip: [150], label: 'Validation loss (nats/token)' },
+      dna: { d: D.dna, x: [4, 2600], xt: [5, 50, 500, 2000], y: [1.215, 1.322], yt: [1.22, 1.24, 1.26, 1.28, 1.30, 1.32], f: 2, label: 'Held-out loss (nats/base)' },
+      cryst: { d: D.crystal, x: [4, 850], xt: [5, 25, 100, 694], y: [0.31, 0.58], yt: [0.32, 0.38, 0.44, 0.50, 0.56], f: 2, label: 'Structure-token loss (nats)' }
+    };
+    const series0 = [{ k: 'se', label: 'Single-epoch frontier', color: C.ref }, { k: 'me', label: 'Tuned repetition', color: C.me, dash: '6 4.5' },
+      { k: 'ext', label: 'Published recipe', color: C.ext, marker: 'star', dash: '0.1 4.5' }, { k: 'one', label: 'Recipe, one run (domain color)', color: '#334155', width: 2.6 }];
+    let s = legend(series0) + '<div class="triple">';
+    for (const key of ['chem', 'dna', 'cryst']) {
+      const p = spec[key], d = p.d, col = C[key];
+      const one = d.one.U.map((u, i) => (p.skip || []).includes(u) ? [u, d.one.loss[i], `${tok(u)}: ${d.one.loss[i].toFixed(4)} (${xs(d.one.x[i])})`] :
+        [u, d.one.loss[i], `${tok(u)}: ${d.one.loss[i].toFixed(4)} (${xs(d.one.x[i])})`, key === 'chem' ? { lab: xs(d.one.x[i]), ldy: 16 } : { lab: xs(d.one.x[i]), ldx: 5, ldy: -6, la: 'start' }]);
+      const ser = [
+        { k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(d.se.U, d.se.loss, (u, v) => `single pass ${tok(u)}: ${v.toFixed(4)}`) },
+        { k: 'me', color: C.me, dash: '5 4', width: 1.6, size: 2.6, pts: zip(d.me.U, d.me.loss, (u, v, i) => `tuned repetition ${tok(u)}: ${v.toFixed(4)} (${xs(d.me.x[i])})`) },
+        { k: 'ext', color: C.ext, marker: 'star', size: 3.4, dash: '0.1 4', width: 1.4, pts: zip(d.ext.U, d.ext.loss, (u, v) => v == null ? null : `${d.ext.name.split(' (')[0]} ${tok(u)}: ${v.toFixed(4)}`) },
+        { k: 'one', color: col, width: 2.4, size: 3.4, pts: one }
+      ];
+      s += '<div class="plot small">' + plot({ ...SM, aria: `${DOM[key]} pretraining loss`, title: DOM[key], titleColor: col, labSize: 10.5,
+        x: { log: true, dom: p.x, ticks: p.xt, fmt: tok, label: 'unique tokens' }, y: { dom: p.y, ticks: p.yt, fmt: v => v.toFixed(p.f), label: p.label }, series: ser }) + '</div>';
+    }
     return s + '</div>';
   };
 
-  /* Figure 2: multiplier vs number of snapshots */
-  const RAMP = ['#b7d0f2', '#93b8ea', '#6c9ee1', '#4686d8', '#2a6fc4', '#1e57a0', '#143f78'];
-  fig.ens = () => {
-    const series = MU.map((u, j) => {
-      const E = D.ens[String(u)];
-      return { k: 'u' + u, label: tok(u), color: RAMP[j], width: 2, size: 3.2, pts: E.k.map((k, i) => { const m = pmult(E.loss[i], u); return [k, m, `${tok(u)}, ${k} snapshot${k > 1 ? 's' : ''}: ${f2(m)}×`]; }) };
-    });
-    return legend(series) + '<div class="plot">' + plot({
-      aria: 'Data multiplier against number of snapshots averaged', w: 760, h: 360,
-      x: { log: true, dom: [0.85, 76], ticks: [1, 2, 4, 8, 16, 32, 64], label: 'Snapshots averaged, k' },
-      y: { dom: [2.4, 6.5], ticks: [2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5], fmt: v => v + '×', label: 'Data multiplier' },
-      series
+  /* Figure 3: multipliers on one axis */
+  fig.mult = () => {
+    const num = v => typeof v === 'number';
+    const mk = (key, d) => {
+      const col = C[key];
+      const one = { k: key, label: DOM[key] + ', recipe', color: col, width: 2.6, size: 4, pts: d.one.U.map((u, i) => num(d.one.x[i]) ? [u, d.one.x[i], `${DOM[key]} ${tok(u)}: ${xs(d.one.x[i])}`] : null).filter(Boolean) };
+      const lb = { k: key, color: col, noLine: true, pts: d.one.U.map((u, i) => num(d.one.x[i]) ? null : [u, +d.one.x[i].slice(1), `${DOM[key]} ${tok(u)}: ${d.one.x[i]}× (beats the whole corpus)`, { hollow: true, marker: 'tri', size: 4.6 }]).filter(Boolean) };
+      const me = { k: key, color: col, dash: '5 4', width: 1.6, size: 2.8, pts: d.me.U.map((u, i) => [u, d.me.x[i], `${DOM[key]} tuned repetition ${tok(u)}: ${xs(d.me.x[i])}`]) };
+      return [me, one, lb];
+    };
+    const series = [...mk('chem', D.chem), ...mk('dna', D.dna), ...mk('cryst', D.crystal)];
+    const leg = [{ k: 'chem', label: DOM.chem, color: C.chem }, { k: 'dna', label: DOM.dna, color: C.dna }, { k: 'cryst', label: DOM.cryst, color: C.cryst },
+      { k: 'solid', label: 'recipe, one run', color: '#334155', marker: 'none' }, { k: 'dash', label: 'tuned repetition', color: '#334155', dash: '5 4', marker: 'none' },
+      { k: 'lb', label: 'lower bound', color: '#334155', noLine: true, marker: 'tri', hollowLegend: true }];
+    return legend(leg) + '<div class="plot">' + plot({
+      aria: 'Data multiplier against unique tokens in three domains', w: 760, h: 380,
+      x: { log: true, dom: [4.2, 240], ticks: [5, 10, 20, 50, 100, 200], fmt: tok, label: 'Unique pretraining tokens U' },
+      y: { dom: [0, 14.5], ticks: [0, 2, 4, 6, 8, 10, 12, 14], fmt: v => v + '×', label: 'Data multiplier' },
+      hlines: [{ y: 1, label: 'single pass (1×)', color: C.ref, lx: 4.4, below: true }], series
     }) + '</div>';
   };
 
-  /* Figure 3: heatmap table of pretraining multipliers */
-  const lerp = (a, b, t) => a + (b - a) * t;
-  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-  const mix = (c0, c1, t) => { const a = hex(c0), b = hex(c1); return `rgb(${a.map((v, i) => Math.round(lerp(v, b[i], t))).join(',')})`; };
-  const seqColor = t => t < .5 ? mix('#f1f5fb', '#7aa7e4', t * 2) : mix('#7aa7e4', '#173f7a', (t - .5) * 2);
-  const spark = (vals, lo, hi, color) => {
-    const w = 72, h = 23, xs = vals.map((_, i) => 3 + i * (w - 6) / (vals.length - 1)), ys = vals.map(v => h - 3 - (v - lo) / (hi - lo) * (h - 6));
-    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><path d="${xs.map((x, i) => (i ? 'L' : 'M') + x.toFixed(1) + ' ' + ys[i].toFixed(1)).join(' ')}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/>${xs.map((x, i) => `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="2.1" fill="${color}"/>`).join('')}</svg>`;
+  /* Figure 4: downstream, one panel per domain */
+  fig.down = () => {
+    const c = D.chem.ft, g = D.dna.genes, mb = D.crystal.mb;
+    const leg = [{ k: 'se', label: 'Single-epoch', color: C.ref }, { k: 'ext', label: 'Published recipe', color: C.ext, marker: 'star', dash: '0.1 4.5' },
+      { k: 'one', label: 'Recipe, one run (domain color)', color: '#334155', width: 2.6 }];
+    let s = legend(leg) + '<div class="triple">';
+    const labs = (U, Y, X, unit, f) => U.map((u, i) => [u, Y[i], `${tok(u)}: ${f(Y[i])}${X && X[i] ? ' (' + xs(X[i]) + ')' : ''}`, X && X[i] ? { lab: xs(X[i]), ldy: -9 } : null]);
+    const chemX = D.chem.U.map((u, i) => [28, 16, 56, '>60', '>30', '>20', '>15'][i]);
+    s += '<div class="plot small">' + plot({ ...SM, aria: 'MoleculeNet pooled score', title: DOM.chem, titleColor: C.chem, labSize: 10.5,
+      x: { log: true, dom: [4, 5200], ticks: [5, 50, 500, 4400], fmt: tok, label: 'pretraining tokens' }, y: { dom: [0, 9.6], ticks: [0, 2, 4, 6, 8], fmt: v => (v > 0 ? '+' : '') + v, label: 'MoleculeNet pooled score ↑' },
+      series: [{ k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(c.refU, c.ref, (u, v) => `single pass ${tok(u)}: ${v.toFixed(2)}`) },
+        { k: 'ext', color: C.ext, marker: 'star', size: 3.4, dash: '0.1 4', width: 1.4, pts: zip(c.extU, c.ext, (u, v) => `Xu et al. ${tok(u)}: ${v.toFixed(2)}`) },
+        { k: 'one', color: C.chem, width: 2.4, size: 3.4, pts: labs(D.chem.U, c.one, chemX.map((v, i) => [0, 2, 3, 6].includes(i) ? v : null), '', v => '+' + v.toFixed(2)) }] }) + '</div>';
+    s += '<div class="plot small">' + plot({ ...SM, aria: 'Gene annotation macro-F1', title: DOM.dna, titleColor: C.dna, labSize: 10.5,
+      x: { log: true, dom: [4, 2600], ticks: [5, 50, 500, 2000], fmt: tok, label: 'unique tokens' }, y: { dom: [0.44, 0.67], ticks: [0.45, 0.50, 0.55, 0.60, 0.65], fmt: v => v.toFixed(2), label: 'Gene annotation macro-F1 ↑' },
+      hlines: [{ y: g.rand, label: 'random init', color: C.muted, lx: 60, below: true }],
+      series: [{ k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(g.seU, g.se, (u, v) => `single pass ${tok(u)}: ${v.toFixed(3)}`) },
+        { k: 'ext', color: C.ext, marker: 'star', size: 3.4, dash: '0.1 4', width: 1.4, pts: zip(g.seU, g.ext, (u, v) => `Evo 2 recipe ${tok(u)}: ${v.toFixed(3)}`) },
+        { k: 'one', color: C.dna, width: 2.4, size: 3.4, pts: labs(g.U, g.one16, g.x.map((v, i) => [0, 2, 5].includes(i) ? v : null), '', v => v.toFixed(3)) }] }) + '</div>';
+    s += '<div class="plot small">' + plot({ ...SM, aria: 'Matbench mean MAE ratio', title: DOM.cryst, titleColor: C.cryst, labSize: 10.5,
+      x: { log: true, dom: [4, 850], ticks: [5, 25, 100, 694], fmt: tok, label: 'unique tokens' }, y: { dom: [1.36, 0.86], ticks: [0.9, 1.0, 1.1, 1.2, 1.3], fmt: v => v.toFixed(1), label: 'Matbench MAE / 694M single pass ↓' },
+      series: [{ k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(mb.U, mb.se, (u, v) => `single pass ${tok(u)}: ${v.toFixed(3)}`) },
+        { k: 'one', color: C.cryst, width: 2.4, size: 3.4, pts: labs(mb.oneU, mb.one, mb.x.map((v, i) => [0, 1, 2, 5].includes(i) ? v : null), '', v => v.toFixed(3)) }] }) + '</div>';
+    return s + '</div>';
   };
-  function heatTable(rows, cols, opts) {
-    let s = `<div class="heat-key"><span>${opts.keyLabel}</span><span class="ramp" style="background:linear-gradient(90deg,${opts.rampCss})"></span><span>${opts.keyEnds}</span></div>`;
-    s += '<div class="scroll"><table class="heatmap"><thead><tr><th class="stub" style="text-align:left">' + opts.stub + '</th>' + cols.map((c, j) => `<th data-s="${j}">${c}</th>`).join('') + (opts.spark ? '<th class="spark">across U</th>' : '') + '</tr></thead><tbody>';
+
+  /* Figure 5: ablation heatmaps, one per domain */
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const mix = (c0, c1, t) => { const a = hex(c0), b = hex(c1); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`; };
+  const seq = (col, t) => t < .55 ? mix('#f3f5f8', col, t / .55) : mix(col, '#0f172a', (t - .55) / .45 * .55);
+  function heat(title, col, cols, rows, dagger) {
+    const all = rows.flatMap(r => r.vals).filter(v => v != null), lo = Math.min(...all), hi = Math.max(...all);
+    let s = `<p class="heat-title"><span class="dom" style="--c:${col}">${title}</span></p><div class="scroll"><table class="heatmap"><thead><tr><th style="text-align:left">arm</th>` +
+      cols.map((c, j) => `<th data-s="${j}">${c}</th>`).join('') + '</tr></thead><tbody>';
     rows.forEach(r => {
       s += `<tr><th>${r.label}</th>` + r.vals.map((v, j) => {
         if (v == null) return `<td data-s="${j}"><div class="tile">—</div></td>`;
-        const bg = opts.color(v), dark = opts.dark(v);
-        return `<td data-s="${j}" tabindex="0"><div class="tile" style="background:${bg};color:${dark ? '#ffffff' : '#0f172a'}">${opts.fmt(v, r)}</div></td>`;
-      }).join('') + (opts.spark ? `<td class="spark">${spark(r.vals, opts.lo, opts.hi, r.color)}</td>` : '') + '</tr>';
+        const t = (v - lo) / (hi - lo || 1), dag = dagger && dagger[r.key] && dagger[r.key][j] ? '†' : '';
+        return `<td data-s="${j}" tabindex="0"><div class="tile" style="background:${seq(col, t)};color:${t > .62 ? '#ffffff' : '#0f172a'}">${v.toFixed(1)}×${dag}</div></td>`;
+      }).join('') + '</tr>';
     });
     return s + '</tbody></table></div>';
   }
   function wireHeat(t) {
     const clear = () => t.querySelectorAll('.on').forEach(n => n.classList.remove('on'));
-    const show = td => { clear(); const j = td.getAttribute('data-s'); td.classList.add('on'); td.parentNode.querySelector('th').classList.add('on');
-      t.querySelectorAll(`thead th[data-s="${j}"]`).forEach(n => n.classList.add('on')); };
+    const show = td => { clear(); const j = td.getAttribute('data-s'); td.classList.add('on'); td.parentNode.querySelector('th').classList.add('on'); t.querySelectorAll(`thead th[data-s="${j}"]`).forEach(n => n.classList.add('on')); };
     const cell = ev => { const n = ev.target.closest ? ev.target.closest('td[data-s]') : null; return n && t.contains(n) ? n : null; };
-    t.addEventListener('pointerover', ev => { const n = cell(ev); if (n) show(n); });
-    t.addEventListener('focusin', ev => { const n = cell(ev); if (n) show(n); });
+    t.addEventListener('pointerover', ev => { const n = cell(ev); if (n) show(n); }); t.addEventListener('focusin', ev => { const n = cell(ev); if (n) show(n); });
     t.addEventListener('pointerleave', clear); t.addEventListener('focusout', clear);
   }
-  fig.heat = () => {
-    const rows = [
-      { label: 'Full recipe', vals: D.pre.full.mult, color: C.full },
-      { label: '− distillation', vals: D.pre.nodist.mult, color: C.nodist },
-      { label: '− looping', vals: D.pre.noloop.mult, color: C.noloop },
-      { label: '− distillation − looping', vals: D.pre.neither.mult, color: C.neither },
-      { label: '− ensembling (best snapshot)', vals: D.pre.single.mult, color: C.single },
-      { label: 'Tuned multi-epoch', vals: D.me_mult, color: C.me }
-    ];
-    const lo = 2, hi = 6.3;
-    return heatTable(rows, MU.map(tok), {
-      stub: 'Arm', keyLabel: 'Data multiplier', keyEnds: '2× → 6.2×', spark: true, lo, hi,
-      rampCss: '#f1f5fb,#7aa7e4,#173f7a',
-      color: v => seqColor(Math.max(0, Math.min(1, (v - lo) / (hi - lo)))), dark: v => (v - lo) / (hi - lo) > .55,
-      fmt: v => v.toFixed(2) + '×'
-    });
-  };
-
-  /* Figure 4: paired z, diverging */
-  fig.paired = () => {
-    const names = { single: '− ensembling', nodist: '− distillation', noloop: '− looping', neither: '− distillation − looping' };
-    const rows = D.paired.rows.map((r, i) => ({ label: 'vs ' + names[r], vals: D.paired.z[i] }));
-    const lim = 5;
-    const div = v => { const t = Math.max(-1, Math.min(1, v / lim)); return t >= 0 ? mix('#f1f3f6', '#2a78d6', t) : mix('#f1f3f6', '#eb6834', -t); };
-    return heatTable(rows, MU.map(tok), {
-      stub: 'Full recipe', keyLabel: 'Paired z', keyEnds: '−5 (arm better) · 0 · +5 (full better)',
-      rampCss: '#eb6834,#f1f3f6,#2a78d6', color: div, dark: v => Math.abs(v) > 3.2,
-      fmt: v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1)
-    });
-  };
-
-  /* Figure 6: two effects */
-  fig.xu = () => {
-    const W = 760, H = 190, l = 40, r = 40;
-    const X = scale([50, 4500], [l, W - r], true), y = 96;
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Tokens needed to reach the loss of Xu et al.'s 3B model">`;
-    [50, 100, 200, 500, 1000, 2000, 3000].forEach(v => { const x = X(v); s += `<line class="grid" x1="${x}" x2="${x}" y1="40" y2="${H - 44}"/><text x="${x}" y="${H - 26}" text-anchor="middle">${tok(v)}</text>`; });
-    s += `<text x="${(l + W - r) / 2}" y="${H - 6}" text-anchor="middle">Tokens needed to reach loss 0.5735 (log scale)</text>`;
-    const P = [[3000, C.xu, 'star', 'Xu et al., one pass', '3B'], [490, C.ref, 'circle', 'Our single pass', '≈490M'], [85, C.full, 'circle', 'Hyper-epoch', '≈85M unique']];
-    const arrow = (a, b, label, c) => { const x0 = X(a) - 12, x1 = X(b) + 12, ym = y - 26;
-      return `<path d="M${x0} ${y - 10} Q ${(x0 + x1) / 2} ${ym - 18} ${x1} ${y - 10}" fill="none" stroke="${c}" stroke-width="1.4"/><path d="M${x1} ${y - 10} l9 -2 l-4 7 z" fill="${c}"/>` +
-        `<text class="anno" x="${(x0 + x1) / 2}" y="${ym - 22}" text-anchor="middle">${label}</text>`; };
-    s += arrow(3000, 490, 'Effect 1: training setup, ≈6.2× less', C.muted) + arrow(490, 85, 'Effect 2: repetition, 5.7× less', C.full);
-    P.forEach(p => { s += mark(p[2], X(p[0]), y, p[1], p[2] === 'star' ? 6.5 : 6, false) +
-      `<text class="dark" x="${X(p[0])}" y="${y + 24}" text-anchor="middle">${p[3]}</text><text x="${X(p[0])}" y="${y + 40}" text-anchor="middle">${p[4]}</text>`; });
-    return '<div class="plot">' + s + '</svg></div>';
+  fig.abl = () => {
+    const a = D.chem.abl, b = D.dna.abl, c = D.crystal.abl;
+    return heat('Molecules', C.chem, D.chem.U.map(tok), [
+      { key: 'full', label: 'Full recipe', vals: a.full }, { key: 'single', label: '− ensembling', vals: a.single }, { key: 'noloop', label: '− looping', vals: a.noloop },
+      { key: 'nodist', label: '− distillation', vals: a.nodist }, { key: 'neither', label: 'cycles only', vals: a.neither }]) +
+      heat('Eukaryotic DNA', C.dna, D.dna.U.map(tok), [
+      { key: 'full', label: 'Full recipe', vals: b.full }, { key: 'single', label: '− ensembling', vals: b.single }, { key: 'noloop', label: '− looping', vals: b.noloop },
+      { key: 'nodist', label: '− distillation', vals: b.nodist }, { key: 'neither', label: 'cycles only', vals: b.neither }]) +
+      heat('Crystals', C.cryst, D.crystal.U.map(tok), [
+      { key: 'full', label: 'Full recipe', vals: c.full }, { key: 'single', label: '− ensembling', vals: c.single }, { key: 'noloop', label: '− looping', vals: c.noloop },
+      { key: 'nopert', label: '− perturbation', vals: c.nopert }, { key: 'neither', label: 'cycles only', vals: c.neither }],
+      { full: [0, 0, 0, 0, 1, 1], single: [0, 0, 0, 0, 0, 1], noloop: [0, 0, 0, 0, 1, 1], nopert: [0, 0, 0, 0, 1, 1] });
   };
 
   document.querySelectorAll('[data-fig]').forEach(el => {
@@ -786,7 +693,7 @@
     wire(el); el.querySelectorAll('table.heatmap').forEach(wireHeat);
   });
 
-  /* ---------- citations: hover cards from the reference list ---------- */
+  /* ---------- citations ---------- */
   document.querySelectorAll('a.ref').forEach(a => {
     const b = document.getElementById('ref-' + a.getAttribute('data-ref')); if (!b) return;
     const w = document.createElement('span'); w.className = 'cite'; a.parentNode.insertBefore(w, a); w.appendChild(a);
@@ -797,15 +704,14 @@
   /* ---------- outline ---------- */
   const heads = [...document.querySelectorAll('main h2[id], main h3[id], #tldr, #references, #appendix')];
   const navHtml = heads.map(h => {
+    if (h.id.startsWith('appendix-')) return '';
     const isSub = h.tagName === 'H3', num = h.querySelector('.num') ? h.querySelector('.num').textContent : '';
     const ttl = h.id === 'tldr' ? 'TL;DR' : h.id === 'references' ? 'References' : h.id === 'appendix' ? 'Appendix' : h.textContent.replace(num, '').trim();
-    if (h.id.startsWith('appendix-')) return '';
     return `<a class="${isSub ? 'sub' : ''}" href="#${h.id}"><span class="num">${num}</span> <span class="ttl">${ttl}</span></a>`;
   }).join('');
   document.getElementById('toc').innerHTML = navHtml; document.getElementById('toc-inline').innerHTML = navHtml;
   const links = [...document.querySelectorAll('#toc a')], targets = links.map(a => document.getElementById(a.getAttribute('href').slice(1)));
-  const markToc = () => { const line = .3 * innerHeight; let on = -1; targets.forEach((t, i) => { if (t.getBoundingClientRect().top <= line) on = i; });
-    links.forEach((a, i) => a.classList.toggle('active', i === on)); };
+  const markToc = () => { const line = .3 * innerHeight; let on = -1; targets.forEach((t, i) => { if (t.getBoundingClientRect().top <= line) on = i; }); links.forEach((a, i) => a.classList.toggle('active', i === on)); };
   addEventListener('scroll', markToc, { passive: true }); addEventListener('resize', markToc); markToc();
 
   /* ---------- math ---------- */
@@ -813,8 +719,274 @@
     delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], output: 'mathml', throwOnError: false }); };
   if (window.renderMathInElement) renderMath(); else addEventListener('load', renderMath);
 
+  /* ======================================================================
+     Hero animation, six steps. Left: the model over a fixed set of documents from three domains.
+     Right: a zoomed view. Numbers in steps 5 and 6 are the measured multipliers.
+     ====================================================================== */
+  const svg = document.getElementById('anim'), NS = 'http://www.w3.org/2000/svg';
+  const E = (tag, a, parent, text) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (text != null) e.textContent = text; (parent || svg).appendChild(e); return e; };
+  const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const FD = "'Space Grotesk', 'IBM Plex Sans', system-ui, sans-serif";
+  const A = { ink: '#0f172a', muted: '#64748b', line: '#94a3b8', soft: '#c3ccd8', fill: '#ffffff', tint: '#eef2f7', blue: '#2a78d6', blueTint: '#e4eefb', warm: '#eb6834', warmTint: '#fdebe2' };
+  const DC = [C.chem, C.dna, C.cryst];
+
+  E('rect', { x: 0, y: 0, width: 800, height: 500, fill: '#ffffff' });
+  const L = E('g', {});
+  const box = (x, y, w, h, label) => { E('rect', { x, y, width: w, height: h, rx: 6, fill: A.fill, stroke: A.line, 'stroke-width': 1.3 }, L);
+    if (label) E('text', { x: x + w / 2, y: y + h / 2, 'text-anchor': 'middle', dy: '0.35em', 'font-size': 13, fill: A.muted }, L, label); return { x, y, w, h }; };
+  E('text', { x: 125, y: 28, 'text-anchor': 'middle', 'font-size': 14, fill: A.ink }, L, 'next-token loss');
+  const vline = (x, y1, y2) => E('line', { x1: x, x2: x, y1, y2, stroke: A.ink, 'stroke-width': 1.6 }, L);
+  vline(125, 36, 44); vline(125, 66, 78); vline(125, 108, 120); vline(125, 248, 260); vline(125, 290, 302); vline(125, 324, 334);
+  const parts = {};
+  parts.unembed = box(40, 44, 170, 22, 'unembed'); parts.coda = box(40, 78, 170, 30, 'coda block'); parts.core = box(40, 120, 170, 128, '');
+  E('text', { x: 52, y: 140, 'font-size': 12, fill: A.blue }, L, 'looped core');
+  for (let i = 0; i < 4; i++) E('rect', { x: 58, y: 152 + i * 21, width: 134, height: 14, rx: 3, fill: A.fill, stroke: A.soft, 'stroke-width': 1 }, L);
+  E('text', { x: 125, y: 240, 'text-anchor': 'middle', 'font-size': 10.5, fill: A.muted }, L, 'tied blocks');
+  E('path', { d: 'M212 232 C 240 232, 240 136, 212 136', fill: 'none', stroke: A.blue, 'stroke-width': 1.6 }, L);
+  E('path', { d: 'M212 136 l8 -4 v8 z', fill: A.blue }, L);
+  E('text', { x: 236, y: 188, 'font-size': 13, fill: A.blue, 'font-weight': 600 }, L, '×2–3');
+  parts.prelude = box(40, 260, 170, 30, 'prelude block'); parts.embed = box(40, 302, 170, 22, 'embed');
+  const TOKS = [['C', 'C', '(', '=', 'O', ')', 'O', 'c'], ['A', 'T', 'G', 'G', 'C', 'G', 'T', 'C'], ['Fe', '2', 'O', '3', 'R', '-3', 'c', '5.0']];
+  const tokCells = TOKS[0].map((c, i) => { const r = E('rect', { x: 44 + i * 21, y: 336, width: 17, height: 17, rx: 3, fill: '#475569' }, L);
+    const t = E('text', { x: 52.5 + i * 21, y: 344.5, dy: '0.35em', 'text-anchor': 'middle', 'font-size': 10.5, fill: '#ffffff', class: 'mono' }, L, c); return { r, t }; });
+  const tokLab = E('text', { x: 218, y: 348, 'font-size': 12, fill: A.muted }, L, 'tokens');
+  parts.data = box(24, 378, 240, 106, '');
+  E('text', { x: 36, y: 398, 'font-size': 12, fill: A.ink, 'font-weight': 600 }, L, 'fixed data: U unique tokens');
+  [['CC(=O)Oc1ccccc1C(=O)O', 0], ['ATGGCGTCCAAGGTGCTCAC', 1], ['Fe2O3  R-3c  a=5.035', 2]].forEach(([m, j], i) => {
+    E('circle', { cx: 40, cy: 414 + i * 16, r: 3.5, fill: DC[j] }, L); E('text', { x: 50, y: 418 + i * 16, 'font-size': 10.5, fill: A.muted, class: 'mono' }, L, m); });
+  const passTxt = E('text', { x: 252, y: 477, 'text-anchor': 'end', 'font-size': 12, fill: A.blue, 'font-weight': 600 }, L, '');
+  const setTok = j => { tokCells.forEach((c, i) => { c.t.textContent = TOKS[j][i]; c.t.setAttribute('font-size', TOKS[j][i].length > 1 ? 8.5 : 10.5); c.r.setAttribute('fill', j === 0 ? '#475569' : j === 1 ? '#7c4a2d' : '#14634a'); });
+    tokLab.textContent = ['SMILES', 'DNA', 'CIF'][j]; };
+  const whole = { x: 40, y: 44, w: 170, h: 280 };
+
+  const IX = 290, IY = 22, IW = 494, IH = 462;
+  const conn1 = E('line', { stroke: A.line, 'stroke-width': 1.2, 'stroke-dasharray': '4 4' }), conn2 = E('line', { stroke: A.line, 'stroke-width': 1.2, 'stroke-dasharray': '4 4' });
+  E('rect', { x: IX, y: IY, width: IW, height: IH, rx: 14, fill: A.fill, stroke: A.line, 'stroke-width': 1.4 });
+  const stepTitle = E('text', { x: IX + 22, y: IY + 32, 'font-size': 15, fill: A.ink, 'font-weight': 600, 'font-family': FD });
+  const stepCap = E('text', { x: IX + 22, y: IY + IH - 18, 'font-size': 12.5, fill: A.muted });
+  const capLines = txt => { stepCap.textContent = ''; txt.split('\n').forEach((t, i) => E('tspan', { x: IX + 22, dy: i ? 16 : (txt.includes('\n') ? -16 : 0) }, stepCap, t)); };
+  const S = [], sceneG = () => E('g', { display: 'none' });
+
+  // 1. fixed data from three domains, many passes
+  (() => {
+    const g = sceneG();
+    const COLS = [['molecules', [['aspirin', 'CC(=O)Oc1ccccc1C…'], ['caffeine', 'Cn1cnc2c1c(=O)n…'], ['paracetamol', 'CC(=O)Nc1ccc(O)cc1'], ['dopamine', 'NCCc1ccc(O)c(O)c1']]],
+      ['DNA windows', [['genic window', 'ATGGCGTCCAAGGTGC…'], ['genic window', 'TTCAGGTAAGCCTTGA…'], ['genic window', 'GCCGCCATGGAGAAGC…'], ['genic window', 'CAGGTGAGTATCTTCC…']]],
+      ['crystal CIFs', [['Fe2O3, hematite', 'R-3c   a = 5.035 Å'], ['NaCl, rock salt', 'Fm-3m  a = 5.640 Å'], ['Si, diamond', 'Fd-3m  a = 5.431 Å'], ['TiO2, rutile', 'P4_2/mnm a=4.594 Å']]]];
+    const chips = [];
+    COLS.forEach(([head, items], col) => {
+      const x = IX + 22 + col * 156;
+      E('circle', { cx: x + 5, cy: IY + 66, r: 4, fill: DC[col] }, g); E('text', { x: x + 14, y: IY + 70, 'font-size': 12, fill: A.ink, 'font-weight': 600 }, g, head);
+      items.forEach(([lab, txt], row) => {
+        const y = IY + 84 + row * 54;
+        const r = E('rect', { x, y, width: 148, height: 44, rx: 7, fill: A.fill, stroke: A.soft, 'stroke-width': 1.2 }, g);
+        E('text', { x: x + 9, y: y + 16, 'font-size': 10.5, fill: A.muted }, g, lab);
+        E('text', { x: x + 9, y: y + 33, 'font-size': 10.5, fill: A.ink, class: 'mono' }, g, txt);
+        chips.push({ r, col });
+      });
+    });
+    const big = E('text', { x: IX + IW - 22, y: IY + 32, 'text-anchor': 'end', 'font-size': 13, fill: A.blue, 'font-weight': 600 }, g, '');
+    S.push({ g, name: 'Scarce data', title: '1  A fixed amount of data', target: 'data', dur: 7000,
+      cap: 'Each domain has a fixed set of documents. A single pass sees each once;\nthe recipe makes many passes over the same U tokens.',
+      update(t) {
+        const pf = 128 * Math.pow(seg(t, .08, .92), 1.6), pass = Math.min(128, Math.floor(pf) + 1), q = pf - Math.floor(pf);
+        chips.forEach((c, i) => { const order = (i % 4) * 3 + c.col, hot = t > .08 && t < .92 && Math.abs(q * 12 - order - .5) < 1.4;
+          c.r.setAttribute('fill', hot ? A.tint : A.fill); c.r.setAttribute('stroke', hot ? DC[c.col] : A.soft); });
+        big.textContent = `pass ${t <= .08 ? 1 : pass} of 128`; passTxt.textContent = `pass ${t <= .08 ? 1 : pass}`; setTok(Math.floor(t * 3) % 3);
+      } });
+  })();
+
+  // 2. looped depth
+  (() => {
+    const g = sceneG(), y = IY + 200, h = 58;
+    const B = [['prelude', IX + 24, 62], ['core', IX + 116, 84], ['core', IX + 222, 84], ['core', IX + 328, 84], ['coda', IX + 436, 36]];
+    const rects = B.map((b, i) => { const core = i >= 1 && i <= 3;
+      const r = E('rect', { x: b[1], y, width: b[2], height: h, rx: 7, fill: A.fill, stroke: core ? A.blue : A.line, 'stroke-width': 1.4, 'stroke-dasharray': i === 3 ? '5 3' : 'none' }, g);
+      E('text', { x: b[1] + b[2] / 2, y: y + h / 2, dy: '0.35em', 'text-anchor': 'middle', 'font-size': 12.5, fill: core ? A.blue : A.muted }, g, b[0]);
+      if (core) E('text', { x: b[1] + b[2] / 2, y: y - 10, 'text-anchor': 'middle', 'font-size': 11, fill: A.muted }, g, i === 3 ? 'loop 3 (not DNA)' : `loop ${i}`);
+      return r; });
+    const pathY = y + h / 2;
+    [[IX + 86, IX + 116], [IX + 200, IX + 222], [IX + 306, IX + 328], [IX + 412, IX + 436]].forEach(([a, b]) => { E('line', { x1: a, x2: b - 4, y1: pathY, y2: pathY, stroke: A.ink, 'stroke-width': 1.4 }, g); E('path', { d: `M${b} ${pathY} l-6 -3.5 v7 z`, fill: A.ink }, g); });
+    const railY = y - 52, inj = [IX + 106, IX + 211, IX + 317];
+    E('path', { d: `M${IX + 55} ${y} V${railY} H${inj[2]}`, fill: 'none', stroke: A.warm, 'stroke-width': 1.4 }, g);
+    const dots = inj.map(x => { E('line', { x1: x, x2: x, y1: railY, y2: pathY - 9, stroke: A.warm, 'stroke-width': 1.4 }, g);
+      const c = E('circle', { cx: x, cy: pathY, r: 8, fill: A.fill, stroke: A.warm, 'stroke-width': 1.4 }, g);
+      E('text', { x, y: pathY, dy: '0.35em', 'text-anchor': 'middle', 'font-size': 12, fill: A.warm, 'font-weight': 600 }, g, '+'); return c; });
+    E('text', { x: IX + 64, y: railY - 10, 'font-size': 11.5, fill: A.warm }, g, 'boundary operator: RMSNorm + re-inject the prelude output');
+    E('path', { d: `M${IX + 116} ${y + h + 14} H${IX + 412}`, fill: 'none', stroke: A.blue, 'stroke-width': 1.2 }, g);
+    E('text', { x: IX + 264, y: y + h + 32, 'text-anchor': 'middle', 'font-size': 11.5, fill: A.blue }, g, 'the same weights, applied two or three times');
+    E('text', { x: IX + 24, y: pathY + 100, 'font-size': 18, fill: A.ink, 'font-weight': 600, 'font-family': FD }, g, 'more compute per token,');
+    E('text', { x: IX + 24, y: pathY + 124, 'font-size': 18, fill: A.blue, 'font-weight': 600, 'font-family': FD }, g, 'no more parameters to overfit');
+    const pulse = E('circle', { r: 5, fill: A.blue, cy: pathY }, g);
+    S.push({ g, name: 'Looped depth', title: '2  Looped depth', target: 'core', dur: 7000,
+      cap: 'The core runs three times with shared weights (twice for DNA). Each\nboundary normalises the state, re-injects the prelude (Chen et al.).',
+      update(t) { const x = IX + 24 + ((t * 2) % 1) * 448; pulse.setAttribute('cx', x);
+        rects.forEach((r, i) => { const b = B[i], on = x >= b[1] && x <= b[1] + b[2]; r.setAttribute('fill', on ? (i >= 1 && i <= 3 ? A.blueTint : '#f1f5f9') : A.fill); });
+        dots.forEach((c, i) => c.setAttribute('fill', Math.abs(x - inj[i]) < 10 ? A.warmTint : A.fill)); passTxt.textContent = 'pass 1'; } });
+  })();
+
+  // 3. cycles & snapshots
+  (() => {
+    const g = sceneG(), x0 = IX + 36, x1 = IX + IW - 30, top = IY + 92, bot = IY + 212, wTop = IY + 262, wBot = IY + 312, shelf = IY + 368, N = 64;
+    const xc = c => x0 + (x1 - x0) * c / N;
+    E('text', { x: x0, y: top - 12, 'font-size': 11.5, fill: A.ink, 'font-weight': 500 }, g, 'learning rate');
+    E('text', { x: x0, y: wTop - 12, 'font-size': 11.5, fill: A.ink, 'font-weight': 500 }, g, 'weight decay');
+    E('text', { x: x0, y: shelf - 16, 'font-size': 11.5, fill: A.ink, 'font-weight': 500 }, g, 'snapshots kept');
+    let d = '', dw = '', da = `M${x0} ${bot} `;
+    for (let c = 0; c < N; c++) { const a = xc(c), b = xc(c + 1), lo = (bot - (bot - top) * .08).toFixed(1);
+      d += `M${a.toFixed(1)} ${top} L${b.toFixed(1)} ${lo} `; da += `L${a.toFixed(1)} ${top} L${b.toFixed(1)} ${lo} `;
+      dw += `M${a.toFixed(1)} ${(wBot - (wBot - wTop) * .7).toFixed(1)} L${b.toFixed(1)} ${wTop} `; }
+    da += `L${x1} ${bot} Z`;
+    E('line', { x1: x0, x2: x1, y1: bot, y2: bot, stroke: A.soft }, g); E('line', { x1: x0, x2: x1, y1: wBot, y2: wBot, stroke: A.soft }, g);
+    const cp = E('clipPath', { id: 'clip-cyc' }, E('defs', {}, g)), cr = E('rect', { x: x0 - 2, y: top - 4, width: 0, height: wBot - top + 8 }, cp);
+    E('path', { d, fill: 'none', stroke: A.soft, 'stroke-width': 1.2 }, g); E('path', { d: dw, fill: 'none', stroke: A.soft, 'stroke-width': 1.2 }, g);
+    E('path', { d: da, fill: A.blueTint, stroke: 'none', 'clip-path': 'url(#clip-cyc)' }, g);
+    E('path', { d, fill: 'none', stroke: A.blue, 'stroke-width': 1.2, 'clip-path': 'url(#clip-cyc)' }, g);
+    E('path', { d: dw, fill: 'none', stroke: A.muted, 'stroke-width': 1.4, 'stroke-dasharray': '3 2.5', 'clip-path': 'url(#clip-cyc)' }, g);
+    [0, 32, 64, 96, 128].forEach(p => E('text', { x: x0 + (x1 - x0) * p / 128, y: bot + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: A.muted }, g, p === 0 ? 'pass 0' : p));
+    E('text', { x: x1, y: top - 12, 'text-anchor': 'end', 'font-size': 10.5, fill: A.muted }, g, 'peak → 0.08× in each cycle');
+    E('text', { x: x1, y: wTop - 12, 'text-anchor': 'end', 'font-size': 10.5, fill: A.muted }, g, '0.7× → 1×, anti-phase');
+    E('line', { x1: x0, x2: x1, y1: shelf + 7, y2: shelf + 7, stroke: A.soft }, g);
+    const snaps = []; for (let c = 1; c <= N; c++) snaps.push(E('circle', { cx: xc(c) - 2.5, cy: shelf, r: 2.6, fill: A.blue, display: 'none' }, g));
+    const cursor = E('line', { y1: top - 4, y2: shelf + 10, stroke: A.ink, 'stroke-width': 1, 'stroke-dasharray': '2 3' }, g);
+    const cnt = E('text', { x: IX + IW - 22, y: IY + 32, 'text-anchor': 'end', 'font-size': 13, fill: A.blue, 'font-weight': 600 }, g, '');
+    S.push({ g, name: 'Cycles', title: '3  Cycles leave snapshots', target: 'model', dur: 8000,
+      cap: 'Each cycle anneals the learning rate and keeps the weights:\n64 snapshots per run (DNA, crystals: after a flat first half).',
+      update(t) { const u = ease(seg(t, .04, .9)), cx = x0 + (x1 - x0) * u, done = Math.floor(u * N + 1e-6);
+        cr.setAttribute('width', cx - x0 + 2); cursor.setAttribute('x1', cx); cursor.setAttribute('x2', cx);
+        snaps.forEach((s, i) => { s.setAttribute('display', i < done ? 'inline' : 'none'); const age = u * N - (i + 1); s.setAttribute('cy', i < done ? shelf - 10 * Math.max(0, 1 - age * 2) : shelf); });
+        cnt.textContent = `snapshot ${done} of 64`; passTxt.textContent = `pass ${Math.max(1, Math.round(u * 128))}`; } });
+  })();
+
+  // 4. optional extras: distillation (molecules) and perturbation (crystals)
+  (() => {
+    const g = sceneG(), cy = IY + 70, ch = 92;
+    const card = (x, label, sub, col) => { E('rect', { x, y: cy, width: 170, height: ch, rx: 9, fill: A.fill, stroke: col, 'stroke-width': 1.4 }, g);
+      E('text', { x: x + 12, y: cy + 22, 'font-size': 12.5, fill: col, 'font-weight': 600 }, g, label); E('text', { x: x + 12, y: cy + 39, 'font-size': 11, fill: A.muted }, g, sub); };
+    const tx = IX + 24, sx = IX + IW - 194;
+    card(tx, 'snapshot k − 1', 'frozen teacher', A.warm); card(sx, 'cycle k', 'student, training', A.blue);
+    const cells = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 9; c++) cells.push(E('rect', { x: sx + 14 + c * 16, y: cy + 50 + r * 12, width: 13, height: 9, rx: 1.5, fill: A.blue }, g));
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 9; c++) E('rect', { x: tx + 14 + c * 16, y: cy + 50 + r * 12, width: 13, height: 9, rx: 1.5, fill: A.warm, opacity: .25 + .6 * ((r * 7 + c * 3) % 5) / 5 }, g);
+    E('path', { d: `M${tx + 178} ${cy + ch / 2} H${sx - 10}`, stroke: A.warm, 'stroke-width': 1.5, fill: 'none', 'stroke-dasharray': '5 4' }, g);
+    E('path', { d: `M${sx - 4} ${cy + ch / 2} l-8 -4.5 v9 z`, fill: A.warm }, g);
+    E('text', { x: (tx + 178 + sx) / 2, y: cy + ch / 2 - 10, 'text-anchor': 'middle', 'font-size': 12, fill: A.warm, 'font-weight': 600 }, g, 'distill');
+    const perturb = E('text', { x: sx + 170, y: cy + ch + 18, 'text-anchor': 'end', 'font-size': 11.5, fill: A.blue, 'font-weight': 500 }, g, '');
+    const rows = [['chain distillation', 'helps molecules; little for DNA; nothing for crystals', C.chem],
+                  ['weight perturbation', 'helps crystals at 10M; no gain for DNA', C.cryst]];
+    rows.forEach((r, i) => { const y = IY + 250 + i * 70;
+      E('rect', { x: IX + 24, y, width: IW - 48, height: 56, rx: 8, fill: '#f8fafc', stroke: A.soft }, g);
+      E('circle', { cx: IX + 42, cy: y + 20, r: 5, fill: r[2] }, g);
+      E('text', { x: IX + 54, y: y + 24, 'font-size': 13, fill: A.ink, 'font-weight': 600 }, g, r[0]);
+      E('text', { x: IX + 54, y: y + 43, 'font-size': 11.5, fill: A.muted }, g, r[1]); });
+    const base = cells.map((_, i) => .35 + .55 * ((i * 37) % 11) / 11);
+    S.push({ g, name: 'Extras', title: '4  Extras that depend on the domain', target: 'model', dur: 7000,
+      cap: 'Two more components were tested in every domain and kept only\nwhere they helped: distillation, and a weight kick per snapshot.',
+      update(t, ms) { const kick = seg(t, .45, .8);
+        cells.forEach((c, i) => { const j = kick > 0 && kick < 1 ? .3 * Math.sin(ms / 60 + i * 1.7) * (1 - kick) : 0; c.setAttribute('opacity', clamp(base[i] + j, .1, 1)); });
+        perturb.textContent = t > .43 ? 'snapshot kept → perturb weights' : ''; passTxt.textContent = 'pass 17'; } });
+  })();
+
+  // 5. average the snapshots; measured single-snapshot vs ensemble multipliers
+  (() => {
+    const g = sceneG();
+    const pre = ['c', '1', 'c', 'c', 'c', 'c', 'c', '1', 'C', '(', '='];
+    pre.forEach((c, i) => { E('rect', { x: IX + 24 + i * 22, y: IY + 56, width: 18, height: 20, rx: 3, fill: '#475569' }, g);
+      E('text', { x: IX + 33 + i * 22, y: IY + 66, dy: '0.35em', 'text-anchor': 'middle', 'font-size': 11.5, fill: '#ffffff', class: 'mono' }, g, c); });
+    E('rect', { x: IX + 24 + 11 * 22, y: IY + 56, width: 18, height: 20, rx: 3, fill: A.fill, stroke: A.blue, 'stroke-dasharray': '3 2' }, g);
+    E('text', { x: IX + 33 + 11 * 22, y: IY + 66, dy: '0.35em', 'text-anchor': 'middle', 'font-size': 11.5, fill: A.blue }, g, '?');
+    E('text', { x: IX + 24 + 12 * 22 + 6, y: IY + 66, dy: '0.35em', 'font-size': 11.5, fill: A.muted }, g, 'next token (illustrative)');
+    const V = ['O', 'N', 'S', 'C', 'c'], truth = [.6, .2, .1, .06, .04], bx = IX + 36, bw = 30, gap = 8, by = IY + 330, bh = 200;
+    E('line', { x1: bx - 6, x2: bx + V.length * (bw + gap), y1: by, y2: by, stroke: A.soft }, g);
+    V.forEach((v, i) => E('text', { x: bx + i * (bw + gap) + bw / 2, y: by + 16, 'text-anchor': 'middle', 'font-size': 12, fill: A.muted, class: 'mono' }, g, v));
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const members = Array.from({ length: 64 }, () => { const p = truth.map(q => Math.max(.005, q * Math.exp((rnd() - .5) * 1.6))); const z = p.reduce((a, b) => a + b, 0); return p.map(q => q / z); });
+    const ticks = members.map(p => V.map((_, i) => E('line', { x1: bx + i * (bw + gap) + 2, x2: bx + i * (bw + gap) + bw - 2, y1: by - p[i] * bh, y2: by - p[i] * bh, stroke: A.warm, 'stroke-width': 1.2, opacity: .45, display: 'none' }, g)));
+    const bars = V.map((_, i) => E('rect', { x: bx + i * (bw + gap), width: bw, rx: 2, fill: A.blue, opacity: .9 }, g));
+    E('text', { x: bx - 6, y: by - bh - 12, 'font-size': 11.5, fill: A.ink, 'font-weight': 500 }, g, 'averaged probability');
+    const kT = E('text', { x: bx - 6, y: by - bh - 30, 'font-size': 12, fill: A.warm, 'font-weight': 600 }, g, '');
+    // measured: best single snapshot vs snapshot average (leave-one-out tables)
+    const rx = IX + 250, rw = IW - 250 - 24, MX = v => rx + rw * v / 14;
+    E('text', { x: rx, y: IY + 100, 'font-size': 11.5, fill: A.ink, 'font-weight': 500 }, g, 'data multiplier, measured');
+    E('text', { x: rx, y: IY + 115, 'font-size': 10.5, fill: A.muted }, g, 'light: best snapshot · dark: all 64');
+    const M = [['molecules, 200M', 3.19, 5.85, C.chem], ['DNA, 200M', 7.5, 8.8, C.dna], ['crystals, 25M', 9.9, 13.3, C.cryst]];
+    const ens = M.map((m, i) => { const y = IY + 142 + i * 66;
+      E('text', { x: rx, y, 'font-size': 11.5, fill: A.ink }, g, m[0]);
+      E('rect', { x: rx, y: y + 8, width: MX(m[1]) - rx, height: 12, rx: 3, fill: m[3], opacity: .35 }, g);
+      E('text', { x: MX(m[1]) + 4, y: y + 18, 'font-size': 10.5, fill: A.muted }, g, `${m[1].toFixed(1)}×`);
+      const r = E('rect', { x: rx, y: y + 26, width: 0, height: 12, rx: 3, fill: m[3] }, g);
+      const tx = E('text', { x: rx, y: y + 36, 'font-size': 10.5, fill: A.ink, 'font-weight': 600 }, g, '');
+      return { r, tx, m }; });
+    S.push({ g, name: 'Average', title: '5  Average the snapshots', target: 'unembed', dur: 8500,
+      cap: "The model averages its snapshots' next-token probabilities. Right:\nbest single snapshot vs all 64 averaged, measured in each domain.",
+      update(t) { const u = seg(t, .05, .7), K = Math.min(64, Math.max(1, Math.round(Math.pow(2, 6 * u))));
+        ticks.forEach((tk, j) => tk.forEach(l => l.setAttribute('display', j < K ? 'inline' : 'none')));
+        V.forEach((_, i) => { let p = 0; for (let j = 0; j < K; j++) p += members[j][i]; p /= K; bars[i].setAttribute('y', by - p * bh); bars[i].setAttribute('height', p * bh); });
+        kT.textContent = `${K} snapshot${K > 1 ? 's' : ''}`;
+        const v = ease(seg(t, .72, .9));
+        ens.forEach(e => { const w = (MX(e.m[2]) - rx) * v; e.r.setAttribute('width', w); e.tx.setAttribute('x', rx + w + 4); e.tx.textContent = v > .98 ? `${e.m[2].toFixed(1)}×` : ''; });
+        passTxt.textContent = 'pass 128'; } });
+  })();
+
+  // 6. result: multiplier ranges per domain
+  (() => {
+    const g = sceneG(), x0 = IX + 150, x1 = IX + IW - 84, X = v => x0 + (x1 - x0) * v / 14;
+    [1, 5, 10].forEach(v => { E('line', { x1: X(v), x2: X(v), y1: IY + 70, y2: IY + 330, stroke: '#eef2f6' }, g); E('text', { x: X(v), y: IY + 348, 'text-anchor': 'middle', 'font-size': 10.5, fill: A.muted }, g, v + '×'); });
+    E('text', { x: (x0 + x1) / 2, y: IY + 366, 'text-anchor': 'middle', 'font-size': 11, fill: A.muted }, g, 'data multiplier vs a tuned single pass');
+    const R = [['molecules', 2.1, 3.0, 5.4, 6.2, C.chem, '5–200M', '2.1–3.0', '5.4–6.2'], ['DNA', 2.9, 5.7, 5.5, 8.9, C.dna, '5–200M', '2.9–5.7', '5.5–8.9'], ['crystals', 3.4, 4.0, 7.4, 13.3, C.cryst, '5–50M', '3.4–4.0', '7.4–13.3']];
+    const bars = R.map((r, i) => { const y = IY + 92 + i * 80;
+      E('circle', { cx: IX + 30, cy: y + 4, r: 5, fill: r[5] }, g);
+      E('text', { x: IX + 42, y: y + 8, 'font-size': 13, fill: A.ink, 'font-weight': 600 }, g, r[0]);
+      E('text', { x: IX + 42, y: y + 26, 'font-size': 10.5, fill: A.muted }, g, r[6]);
+      const me = E('rect', { x: X(r[1]), y: y - 6, width: 0, height: 12, rx: 3, fill: C.me }, g);
+      const one = E('rect', { x: X(r[3]), y: y + 12, width: 0, height: 12, rx: 3, fill: r[5] }, g);
+      const t1 = E('text', { x: X(r[2]) + 6, y: y + 4, 'font-size': 10.5, fill: A.muted }, g, '');
+      const t2 = E('text', { x: X(r[4]) + 6, y: y + 22, 'font-size': 11, fill: A.ink, 'font-weight': 600 }, g, '');
+      return { r, me, one, t1, t2 }; });
+    E('rect', { x: IX + 150, y: IY + 384, width: 12, height: 8, rx: 2, fill: C.me }, g); E('text', { x: IX + 168, y: IY + 392, 'font-size': 10.5, fill: A.muted }, g, 'tuned repetition');
+    E('rect', { x: IX + 300, y: IY + 384, width: 12, height: 8, rx: 2, fill: '#334155' }, g); E('text', { x: IX + 318, y: IY + 392, 'font-size': 10.5, fill: A.muted }, g, 'recipe, one run');
+    S.push({ g, name: 'Result', title: '6  Every domain, five to thirteen times', target: 'model', dur: 7000,
+      cap: 'One run of the recipe against tuned repetition. Each bar spans\nthe range of measured multipliers across budgets.',
+      update(t) { const a = ease(seg(t, .05, .4)), b = ease(seg(t, .35, .75));
+        bars.forEach(o => { const r = o.r; o.me.setAttribute('width', (X(r[2]) - X(r[1])) * a); o.one.setAttribute('width', (X(r[4]) - X(r[3])) * b);
+          o.t1.textContent = a > .98 ? `${r[7]}×` : ''; o.t2.textContent = b > .98 ? `${r[8]}×` : ''; });
+        passTxt.textContent = '128 passes'; } });
+  })();
+
+  // ---- player ----
+  const halo = E('rect', { rx: 8, fill: 'none', stroke: A.blue, 'stroke-width': 2.2 }, L); L.insertBefore(halo, L.firstChild);
+  const targetBox = name => name === 'model' ? whole : parts[name];
+  const total = S.reduce((a, s) => a + s.dur, 0), starts = []; S.reduce((a, s, i) => (starts[i] = a, a + s.dur), 0);
+  const chapters = document.getElementById('anim-chapters'), playBtn = document.getElementById('anim-play');
+  let clock = 0, last = null, playing = !matchMedia('(prefers-reduced-motion: reduce)').matches, cur = -1, visible = true;
+  S.forEach((s, i) => { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = `<span class="n">${i + 1}</span>${s.name}<span class="fill"></span>`;
+    b.addEventListener('click', () => seek(starts[i] + (playing ? 0 : s.dur * .999))); chapters.appendChild(b); });
+  function render(ms) {
+    let i = 0; while (i < S.length - 1 && ms >= starts[i + 1]) i++;
+    const s = S[i], t = clamp((ms - starts[i]) / s.dur);
+    if (i !== cur) {
+      S.forEach((x, j) => x.g.setAttribute('display', j === i ? 'inline' : 'none'));
+      stepTitle.textContent = s.title; capLines(s.cap);
+      const b = targetBox(s.target);
+      halo.setAttribute('x', b.x - 4); halo.setAttribute('y', b.y - 4); halo.setAttribute('width', b.w + 8); halo.setAttribute('height', b.h + 8);
+      conn1.setAttribute('x1', b.x + b.w + 4); conn1.setAttribute('y1', b.y - 4); conn1.setAttribute('x2', IX); conn1.setAttribute('y2', IY + 14);
+      conn2.setAttribute('x1', b.x + b.w + 4); conn2.setAttribute('y1', b.y + b.h + 4); conn2.setAttribute('x2', IX); conn2.setAttribute('y2', IY + IH - 14);
+      [...chapters.children].forEach((c, j) => c.classList.toggle('cur', j === i));
+      if (i !== 0) setTok(0);
+      cur = i;
+    }
+    s.g.setAttribute('opacity', playing ? clamp((ms - starts[i]) / 350) : 1);
+    s.update(t, ms);
+    [...chapters.children].forEach((c, j) => { c.querySelector('.fill').style.width = (j < i ? 100 : j > i ? 0 : t * 100) + '%'; });
+  }
+  function seek(ms) { clock = ((ms % total) + total) % total; render(clock); }
+  function frame(now) { if (playing && visible) { if (last != null) clock = (clock + Math.min(64, now - last)) % total; render(clock); } last = now; requestAnimationFrame(frame); }
+  playBtn.addEventListener('click', () => { playing = !playing; playBtn.textContent = playing ? 'Pause' : 'Play'; playBtn.setAttribute('aria-label', (playing ? 'Pause' : 'Play') + ' animation'); render(clock); });
+  if (!playing) { playBtn.textContent = 'Play'; playBtn.setAttribute('aria-label', 'Play animation'); seek(starts[5] + S[5].dur * .999); } else render(0);
+  if ('IntersectionObserver' in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(svg);
+  requestAnimationFrame(frame);
 })();
 </script>
-
 </body>
 </html>
