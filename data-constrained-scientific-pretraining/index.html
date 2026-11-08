@@ -301,7 +301,7 @@
 
     <figure id="fig-mult">
       <div class="panel wrap" data-fig="mult"></div>
-      <figcaption><span class="fignum">Figure 3.</span> Data multipliers for one run of the recipe (solid lines) and tuned repetition (dashed lines). Open triangles mark crystal results that beat a single pass over the whole corpus; those points are lower bounds.</figcaption>
+      <figcaption><span class="fignum">Figure 3.</span> Data multipliers for one run of the recipe (solid lines) and tuned repetition (dashed lines). The crystal recipe line turns dotted after 50M tokens to guide the eye toward its open triangles at 100M and 200M. Those triangles are lower bounds, not exact multiplier values: both runs beat a single pass over the whole corpus.</figcaption>
     </figure>
 
     <p>These results use one training run per budget. Combining several runs can improve them further, at extra compute cost (Appendix B).</p>
@@ -621,13 +621,14 @@
       const col = C[key];
       const one = { k: key, label: DOM[key] + ', recipe', color: col, width: 2.6, size: 4, pts: d.one.U.map((u, i) => num(d.one.x[i]) ? [u, d.one.x[i], `${DOM[key]} ${tok(u)}: ${xs(d.one.x[i])}`] : null).filter(Boolean) };
       const lb = { k: key, color: col, noLine: true, pts: d.one.U.map((u, i) => num(d.one.x[i]) ? null : [u, +d.one.x[i].slice(1), `${DOM[key]} ${tok(u)}: ${d.one.x[i]}× (beats the whole corpus)`, { hollow: true, marker: 'tri', size: 4.6 }]).filter(Boolean) };
+      const boundGuide = lb.pts.length ? { k: key, color: col, dash: '2 4', width: 2, marker: 'none', pts: [one.pts[one.pts.length - 1], ...lb.pts].map(p => [p[0], p[1]]) } : null;
       const me = { k: key, color: col, dash: '5 4', width: 1.6, size: 2.8, pts: d.me.U.map((u, i) => [u, d.me.x[i], `${DOM[key]} tuned repetition ${tok(u)}: ${xs(d.me.x[i])}`]) };
-      return [me, one, lb];
+      return [me, one, boundGuide, lb].filter(Boolean);
     };
     const series = [...mk('chem', D.chem), ...mk('dna', D.dna), ...mk('cryst', D.crystal)];
     const leg = [{ k: 'chem', label: DOM.chem, color: C.chem }, { k: 'dna', label: DOM.dna, color: C.dna }, { k: 'cryst', label: DOM.cryst, color: C.cryst },
       { k: 'solid', label: 'recipe, one run', color: '#334155', marker: 'none' }, { k: 'dash', label: 'tuned repetition', color: '#334155', dash: '5 4', marker: 'none' },
-      { k: 'lb', label: 'lower bound', color: '#334155', noLine: true, marker: 'tri', hollowLegend: true }];
+      { k: 'lb', label: 'lower-bound guide', color: '#334155', dash: '2 4', marker: 'tri', hollowLegend: true }];
     return legend(leg) + '<div class="plot">' + plot({
       aria: 'Data multiplier against unique tokens in three domains', w: 760, h: 380,
       x: { log: true, dom: [4.2, 240], ticks: [5, 10, 20, 50, 100, 200], fmt: tok, label: 'Unique pretraining tokens U' },
