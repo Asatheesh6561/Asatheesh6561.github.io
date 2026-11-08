@@ -168,8 +168,8 @@
   :root { --chem: #2a78d6; --dna: #eb6834; --cryst: #1baf7a; --ext: #475569; }
   .triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 14px; }
   @media (max-width: 760px) { .triple { grid-template-columns: minmax(0, 1fr); } }
-  .quad { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
-  @media (max-width: 640px) { .quad { grid-template-columns: minmax(0, 1fr); } }
+  .double { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+  @media (max-width: 640px) { .double { grid-template-columns: minmax(0, 1fr); } }
   .dom { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
   .dom::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
   .dom.chem { --c: var(--chem); } .dom.dna { --c: var(--dna); } .dom.cryst { --c: var(--cryst); }
@@ -341,7 +341,10 @@
     </figure>
 
     <h2 id="downstream"><span class="num">6</span>Does Better Pretraining Carry Over?</h2>
-    <p>A lower pretraining loss is useful if it helps with real tasks. We test property prediction for molecules and materials, gene annotation for DNA, and crystal structure prediction. For the fine-tuning tasks, we keep the pretrained network frozen and train small LoRA adapters. That makes the comparison focus on what the model learned during pretraining (Figure 4). Structure prediction is evaluated without fine-tuning.</p>
+    <p>A lower pretraining loss is useful if it helps with real tasks. We evaluate transfer in two ways: by fine-tuning small adapters for a task, and by using the pretrained model directly in zero-shot tests.</p>
+
+    <h3 id="finetuning"><span class="num">6.1</span>Fine-tuning</h3>
+    <p>For property prediction and gene annotation, we keep the pretrained network frozen and train small LoRA adapters. This lets us compare how well the representations learned during pretraining support each task (Figure 4).</p>
     <ul>
       <li><span class="runin"><span class="dom chem">Molecules:</span></span> We pool eight MoleculeNet tasks with scaffold splits into one score, scaled to $\ln U$ on the single-pass curve. With 50M unique pretraining tokens, the recipe fine-tunes better than a model trained once on 3B tokens.</li>
       <li><span class="runin"><span class="dom dna">DNA:</span></span> We label each base as intergenic, intronic, exonic, or coding across six held-out genera. At 5M–20M tokens, the recipe's averaged fine-tuned snapshots are worth 8.2–10.7× as much unique data. From 50M onward, they beat a single pass over 2B tokens.</li>
@@ -349,12 +352,19 @@
     </ul>
 
     <figure id="fig-down">
-      <div class="panel wrap" data-fig="down"></div>
-      <figcaption><span class="fignum">Figure 4.</span> Downstream scores by unique pretraining tokens. Labels on our recipe points show downstream data multipliers; † marks estimates extrapolated beyond the measured baseline. Higher is better for MoleculeNet, gene annotation, and crystal structure match@1. The Matbench MAE axis is reversed so better results appear higher. The CrystaLLM line in the structure panel uses its one-pass recipe on the same data; no comparable CrystaLLM Matbench result is available.</figcaption>
+      <div class="panel wrap" data-fig="finetune"></div>
+      <figcaption><span class="fignum">Figure 4.</span> Fine-tuning results by unique pretraining tokens: MoleculeNet property prediction, DNA gene annotation, and Matbench property prediction. Higher is better for MoleculeNet and gene annotation; the Matbench MAE axis is reversed so better results appear higher. Published recipe curves are shown for molecules and DNA; no comparable CrystaLLM Matbench result is available. Labels show data multipliers, with † marking extrapolated estimates.</figcaption>
     </figure>
 
-    <p>Table 5 also reports results without fine-tuning. On human ClinVar variants, DNA models trained with our recipe on 50M–200M unique tokens match single-pass models trained on 13–14× more data. Humans are absent from our training set, and across models the ClinVar score tracks pretraining loss.</p>
-    <p>For crystals, we give the model a composition and ask it to generate a structure. At 5M–50M unique tokens, the recipe matches the true structure as often as a single pass trained on 4.9–10.5× more data, or CrystaLLM's recipe trained on 15–24× more.</p>
+    <h3 id="zero-shot"><span class="num">6.2</span>Zero-shot Evaluation</h3>
+    <p>These tests use the pretrained models without any task-specific training (Figure 5 and Table 5).</p>
+    <p><span class="runin"><span class="dom dna">DNA.</span></span> We score human ClinVar variants using the model's relative likelihood of the alternative and reference sequences. Models trained with our recipe on 50M–200M unique tokens match single-pass models trained on 13–14× more data. Humans are absent from our training set, and across models the ClinVar score tracks pretraining loss.</p>
+    <p><span class="runin"><span class="dom cryst">Crystals.</span></span> We give the model a composition and ask it to generate a structure. At 5M–50M unique tokens, the recipe matches the true structure as often as a single pass trained on 4.9–10.5× more data, or CrystaLLM's recipe trained on 15–24× more.</p>
+
+    <figure id="fig-zeroshot">
+      <div class="panel wrap" data-fig="zeroshot"></div>
+      <figcaption><span class="fignum">Figure 5.</span> Zero-shot results by unique pretraining tokens. ClinVar measures variant discrimination with AUROC; crystal structure prediction measures the first sample's match rate from a composition-only prompt. Higher is better in both panels. The crystal comparison includes CrystaLLM's one-pass recipe on the same data. Labels show data multipliers, with † marking extrapolated estimates.</figcaption>
+    </figure>
 
     <figure class="table" id="tab-zeroshot">
       <figcaption><span class="fignum">Table 5.</span> Tests without fine-tuning. ClinVar uses the AUROC of alternative-minus-reference log-likelihood on single-nucleotide variants. Crystal structure prediction uses the first of 20 samples for each of 8,682 held-out compositions, following CrystaLLM's protocol. Multipliers give the unique data a single pass would need for the same score; † marks extrapolated estimates.</figcaption>
@@ -373,7 +383,7 @@
     </figure>
 
     <h2 id="components"><span class="num">7</span>Which Parts Matter?</h2>
-    <p>To see what drives the gain, we remove one component at a time and rerun the best configuration at each budget. For the comparison without ensembling, we use the best single snapshot from the full run (Figure 5).</p>
+    <p>To see what drives the gain, we remove one component at a time and rerun the best configuration at each budget. For the comparison without ensembling, we use the best single snapshot from the full run (Figure 6).</p>
     <ul>
       <li><span class="runin">Averaging snapshots helps in every domain.</span> For molecules, the best single snapshot is worth 3.2–4.1× the data, while the ensemble reaches 5.4–6.2×. At 5M–50M crystal tokens, those ranges are 5.0–9.9× and 7.4–13.3×. For DNA, averaging adds about 1–2× at most budgets; at 10M, the difference is within seed noise.</li>
       <li><span class="runin">Reusing the core blocks helps more as the dataset grows.</span> Removing looping costs 0.45× at 5M molecular tokens and 1.33× at 200M. For DNA, the cost grows from 0.9× at 20M to 3.4× at 200M. Looping also helps at every crystal budget we tested, by 0.8–2.3×.</li>
@@ -382,7 +392,7 @@
 
     <figure id="fig-abl">
       <div class="panel wrap" data-fig="abl"></div>
-      <figcaption><span class="fignum">Figure 5.</span> Ablation data multipliers. Rows marked − remove a component; +distillation adds it to the crystal recipe. DNA values are means of three seeds on the held-out split. Crystal “cycles only” was measured at the recipe settings only at 5M and 10M; dashes at larger budgets mean no matched run. Each domain has its own shading. † marks extrapolation beyond the longest single pass; ‡ marks crystal distillation runs with a different pass count from the full recipe.</figcaption>
+      <figcaption><span class="fignum">Figure 6.</span> Ablation data multipliers. Rows marked − remove a component; +distillation adds it to the crystal recipe. DNA values are means of three seeds on the held-out split. Crystal “cycles only” was measured at the recipe settings only at 5M and 10M; dashes at larger budgets mean no matched run. Each domain has its own shading. † marks extrapolation beyond the longest single pass; ‡ marks crystal distillation runs with a different pass count from the full recipe.</figcaption>
     </figure>
 
     <h2 id="conclusion"><span class="num">8</span>What We Learned</h2>
@@ -643,37 +653,56 @@
     }) + '</div>';
   };
 
-  /* Figure 4: fine-tuning and crystal structure prediction */
-  fig.down = () => {
-    const c = D.chem.ft, g = D.dna.genes, mb = D.crystal.mb, zs = D.crystal.zs;
-    const leg = [{ k: 'se', label: 'Single-epoch', color: C.ref }, { k: 'ext', label: 'Published recipe', color: C.ext, marker: 'star', dash: '0.1 4.5' },
-      { k: 'one', label: 'Recipe, one run (domain color)', color: '#334155', width: 2.6 }];
-    let s = legend(leg) + '<div class="quad">';
-    const labs = (U, Y, X, extrapolated, f) => U.map((u, i) => [u, Y[i], `${tok(u)}: ${f(Y[i])}${X && X[i] ? ' (' + xs(X[i], extrapolated && extrapolated[i]) + ')' : ''}`, X && X[i] ? { lab: xs(X[i], extrapolated && extrapolated[i]), ldy: -9 } : null]);
+  const taskLegend = () => legend([
+    { k: 'se', label: 'Single-epoch', color: C.ref },
+    { k: 'ext', label: 'Published recipe', color: C.ext, marker: 'star', dash: '0.1 4.5' },
+    { k: 'one', label: 'Recipe, one run (domain color)', color: '#334155', width: 2.6 }
+  ]);
+  const taskPoints = (U, Y, X, extrapolated, f, labelAt) => U.map((u, i) => {
+    const multiplier = X && X[i] != null ? xs(X[i], extrapolated && extrapolated[i]) : null;
+    return [u, Y[i], `${tok(u)}: ${f(Y[i])}${multiplier ? ' (' + multiplier + ')' : ''}`,
+      multiplier && labelAt.includes(i) ? { lab: multiplier, ldy: -9 } : null];
+  });
+
+  /* Figure 4: fine-tuning, one panel per domain */
+  fig.finetune = () => {
+    const c = D.chem.ft, g = D.dna.genes, mb = D.crystal.mb;
+    let s = taskLegend() + '<div class="triple">';
     s += '<div class="plot small">' + plot({ ...SM, aria: 'MoleculeNet pooled score', title: DOM.chem, titleColor: C.chem, labSize: 10.5,
       x: { log: true, dom: [4, 5200], ticks: [5, 50, 500, 4400], fmt: tok, label: 'pretraining tokens' }, y: { dom: [0, 9.6], ticks: [0, 2, 4, 6, 8], fmt: v => (v > 0 ? '+' : '') + v, label: 'MoleculeNet pooled score ↑' },
       series: [{ k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(c.refU, c.ref, (u, v) => `single pass ${tok(u)}: ${v.toFixed(2)}`) },
         { k: 'ext', color: C.ext, marker: 'star', size: 3.4, dash: '0.1 4', width: 1.4, pts: zip(c.extU, c.ext, (u, v) => `Xu et al. ${tok(u)}: ${v.toFixed(2)}`) },
-        { k: 'one', color: C.chem, width: 2.4, size: 3.4, pts: labs(D.chem.U, c.one, c.x.map((v, i) => [0, 2, 3, 6].includes(i) ? v : null), c.x_ext, v => '+' + v.toFixed(2)) }] }) + '</div>';
+        { k: 'one', color: C.chem, width: 2.4, size: 3.4, pts: taskPoints(D.chem.U, c.one, c.x, c.x_ext, v => '+' + v.toFixed(2), [0, 2, 3, 6]) }] }) + '</div>';
     s += '<div class="plot small">' + plot({ ...SM, aria: 'Gene annotation macro-F1', title: DOM.dna, titleColor: C.dna, labSize: 10.5,
       x: { log: true, dom: [4, 2600], ticks: [5, 50, 500, 2000], fmt: tok, label: 'unique tokens' }, y: { dom: [0.44, 0.67], ticks: [0.45, 0.50, 0.55, 0.60, 0.65], fmt: v => v.toFixed(2), label: 'Gene annotation macro-F1 ↑' },
       hlines: [{ y: g.rand, label: 'random init', color: C.muted, lx: 60, below: true }],
       series: [{ k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(g.seU, g.se, (u, v) => `single pass ${tok(u)}: ${v.toFixed(3)}`) },
         { k: 'ext', color: C.ext, marker: 'star', size: 3.4, dash: '0.1 4', width: 1.4, pts: zip(g.seU, g.ext, (u, v) => `Evo 2 recipe ${tok(u)}: ${v.toFixed(3)}`) },
-        { k: 'one', color: C.dna, width: 2.4, size: 3.4, pts: labs(g.U, g.one16, g.x.map((v, i) => [0, 2, 5].includes(i) ? v : null), g.x_ext, v => v.toFixed(3)) }] }) + '</div>';
+        { k: 'one', color: C.dna, width: 2.4, size: 3.4, pts: taskPoints(g.U, g.one16, g.x, g.x_ext, v => v.toFixed(3), [0, 2, 5]) }] }) + '</div>';
     s += '<div class="plot small">' + plot({ ...SM, aria: 'Matbench mean MAE ratio', title: 'Crystals · Matbench', titleColor: C.cryst, labSize: 10.5,
       x: { log: true, dom: [4, 850], ticks: [5, 25, 100, 694], fmt: tok, label: 'unique tokens' }, y: { dom: [1.36, 0.86], ticks: [0.9, 1.0, 1.1, 1.2, 1.3], fmt: v => v.toFixed(1), label: 'Matbench MAE / 694M single pass ↓' },
       series: [{ k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(mb.U, mb.se, (u, v) => `single pass ${tok(u)}: ${v.toFixed(3)}`) },
-        { k: 'one', color: C.cryst, width: 2.4, size: 3.4, pts: labs(mb.oneU, mb.one, mb.x.map((v, i) => [0, 1, 2, 5].includes(i) ? v : null), mb.x_ext, v => v.toFixed(3)) }] }) + '</div>';
+        { k: 'one', color: C.cryst, width: 2.4, size: 3.4, pts: taskPoints(mb.oneU, mb.one, mb.x, mb.x_ext, v => v.toFixed(3), [0, 1, 2, 5]) }] }) + '</div>';
+    return s + '</div>';
+  };
+
+  /* Figure 5: zero-shot evaluation */
+  fig.zeroshot = () => {
+    const cv = D.dna.clinvar, zs = D.crystal.zs;
+    let s = taskLegend() + '<div class="double">';
+    s += '<div class="plot small">' + plot({ ...SM, aria: 'Zero-shot ClinVar variant discrimination AUROC', title: 'DNA · ClinVar variants', titleColor: C.dna, labSize: 10.5,
+      x: { log: true, dom: [4, 2600], ticks: [5, 50, 500, 2000], fmt: tok, label: 'unique tokens' }, y: { dom: [0.44, 0.78], ticks: [0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75], fmt: v => v.toFixed(2), label: 'ClinVar AUROC ↑' },
+      series: [{ k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(cv.seU, cv.se, (u, v) => `single pass ${tok(u)}: ${v.toFixed(3)}`) },
+        { k: 'one', color: C.dna, width: 2.4, size: 3.4, pts: taskPoints(cv.U, cv.one, cv.x, null, v => v.toFixed(3), [2, 3, 5]) }] }) + '</div>';
     s += '<div class="plot small">' + plot({ ...SM, aria: 'Crystal structure prediction match rate with CrystaLLM recipe', title: 'Crystals · structure prediction', titleColor: C.cryst, labSize: 10.5,
       x: { log: true, dom: [4, 850], ticks: [5, 25, 100, 694], fmt: tok, label: 'unique tokens' }, y: { dom: [0, 0.5], ticks: [0, 0.1, 0.2, 0.3, 0.4, 0.5], fmt: v => v.toFixed(1), label: 'Structure match@1 ↑' },
       series: [{ k: 'se', color: C.ref, width: 1.8, size: 2.6, pts: zip(zs.U, zs.se, (u, v) => `single pass ${tok(u)}: ${v.toFixed(3)}`) },
         { k: 'ext', color: C.ext, marker: 'star', size: 3.4, dash: '0.1 4', width: 1.4, pts: zip(zs.U, zs.ext, (u, v) => `CrystaLLM recipe ${tok(u)}: ${v.toFixed(3)}`) },
-        { k: 'one', color: C.cryst, width: 2.4, size: 3.4, pts: labs(zs.oneU, zs.one, zs.x.map((v, i) => [0, 2, 4, 5].includes(i) ? v : null), zs.x_ext, v => v.toFixed(3)) }] }) + '</div>';
+        { k: 'one', color: C.cryst, width: 2.4, size: 3.4, pts: taskPoints(zs.oneU, zs.one, zs.x, zs.x_ext, v => v.toFixed(3), [0, 2, 4, 5]) }] }) + '</div>';
     return s + '</div>';
   };
 
-  /* Figure 5: ablation heatmaps, one per domain */
+  /* Figure 6: ablation heatmaps, one per domain */
   const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   const mix = (c0, c1, t) => { const a = hex(c0), b = hex(c1); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`; };
   const seq = (col, t) => t < .55 ? mix('#f3f5f8', col, t / .55) : mix(col, '#0f172a', (t - .55) / .45 * .55);
