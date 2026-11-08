@@ -355,6 +355,9 @@
       <li><span class="runin"><span class="dom cryst">Crystals: four tasks.</span></span> The Matbench comparisons cover perovskite formation energy, log shear modulus, log bulk modulus, and phonons, each scored by MAE. At 50M unique tokens, one fine-tuned recipe snapshot beats a single pass over the whole corpus on all four tasks.</li>
     </ul>
 
+    <p>The NT/GUE results show a weaker and less consistent benefit than gene annotation. At 5M tokens, the recipe wins on 39 of the 45 benchmarks; at 200M, it wins on 26, with an average advantage of only 0.003 MCC. Some tasks become worse as the pretraining budget grows. These results limit how broadly we can claim that lower pretraining loss improves downstream performance.</p>
+    <p>The full-fine-tuning comparisons also differ in model capacity. At 200M tokens, the single-pass checkpoint has about 1B parameters and the recipe checkpoint has 85M; all of those weights can change during fine-tuning. A learning rate chosen on three validation tasks is shared across the suite. These differences may contribute to the weak transfer, but the existing runs do not isolate their effects.</p>
+
     <figure id="fig-down">
       <div class="panel wrap" data-fig="finetune"></div>
       <figcaption><span class="fignum">Figure 4.</span> Individual fine-tuning results for 58 tasks: eight molecular benchmarks, 18 NT benchmarks, 27 GUE benchmarks, DNA gene annotation, and four Matbench tasks. NT and GUE use full-model fine-tuning with MCC; the other tasks use LoRA. Each panel shows its task's raw score or error. Higher ROC-AUC, MCC, and macro-F1 are better; lower RMSE and MAE are better, with error axes reversed so improvements appear higher. Axis ranges differ between tasks. Published recipe curves are shown for molecules and DNA; no comparable CrystaLLM Matbench result is available. Gene-annotation labels show data multipliers, with † marking extrapolated estimates.</figcaption>
@@ -400,7 +403,7 @@
     </figure>
 
     <h2 id="conclusion"><span class="num">8</span>What We Learned</h2>
-    <p>Molecules, DNA, and crystals look very different to a language model. Yet the same core recipe—looped depth and an ensemble of training snapshots—helps in all three. One run performs like a single pass with roughly five to thirteen times as much unique data. The advantage carries into every downstream task we measured.</p>
+    <p>Molecules, DNA, and crystals look very different to a language model. Yet the same core recipe—looped depth and an ensemble of training snapshots—helps in all three. One run performs like a single pass with roughly five to thirteen times as much unique data. Downstream transfer varies by task and fine-tuning protocol: the NT/GUE suite shows mixed gains that become small at larger budgets.</p>
     <p>Against the published recipes for DNA and crystals, our recipe reaches the same loss with about twenty times less data. We do not yet know how far the gain continues beyond 200M unique tokens; at large budgets, our comparisons sometimes exceed the longest measured single pass.</p>
     <p>We also want to understand why looping matters more as the dataset grows. <a class="ref" data-ref="chen">Chen et al.</a> find that looping regularises multi-epoch training and becomes compute-optimal as models grow, which suggests testing more loops at larger budgets. Future posts in this series will test how broadly the recipe transfers.</p>
 
