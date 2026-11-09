@@ -420,7 +420,7 @@
 
     <figure id="fig-abl">
       <div class="panel wrap" data-fig="abl"></div>
-      <figcaption><span class="fignum">Figure 6.</span> Ablation data multipliers. Rows marked − remove a component; +distillation adds it to the crystal recipe. DNA values are means of three seeds on the held-out split. Crystal “cycles only” removes looping, perturbation, and distillation, retaining cyclic snapshot ensembling at each budget's matched recipe settings. Each domain has its own shading. † marks extrapolation beyond the longest single pass; ‡ marks crystal distillation runs with a different pass count from the full recipe.</figcaption>
+      <figcaption><span class="fignum">Figure 6.</span> Ablation data multipliers. Rows marked − remove a component; +distillation adds it to the crystal recipe. DNA values are means of three seeds on the held-out split. Crystal “cycles only” removes looping, perturbation, and distillation, retaining cyclic snapshot ensembling at each budget's matched recipe settings. Each domain has its own shading. † marks extrapolation beyond the longest single pass.</figcaption>
     </figure>
 
     <h2 id="conclusion"><span class="num">8</span>What We Learned</h2>
@@ -778,8 +778,7 @@
       s += `<tr><th>${r.label}</th>` + r.vals.map((v, j) => {
         if (v == null) return `<td data-s="${j}"><div class="tile">—</div></td>`;
         const t = (v - lo) / (hi - lo || 1), dag = dagger && dagger[r.key] && dagger[r.key][j] ? '†' : '';
-        const note = r.notes && r.notes[j] ? '‡' : '';
-        return `<td data-s="${j}" tabindex="0"${note ? ' title="Different pass count from the full recipe"' : ''}><div class="tile" style="background:${seq(col, t)};color:${t > .62 ? '#ffffff' : '#0f172a'}">${v.toFixed(1)}×${dag}${note}</div></td>`;
+        return `<td data-s="${j}" tabindex="0"><div class="tile" style="background:${seq(col, t)};color:${t > .62 ? '#ffffff' : '#0f172a'}">${v.toFixed(1)}×${dag}</div></td>`;
       }).join('') + '</tr>';
     });
     return s + '</tbody></table></div>';
@@ -801,7 +800,7 @@
       { key: 'nodist', label: '− distillation', vals: b.nodist }, { key: 'neither', label: 'cycles only', vals: b.neither }]) +
       heat('Crystals', C.cryst, D.crystal.U.map(tok), [
       { key: 'full', label: 'Full recipe', vals: c.full }, { key: 'single', label: '− ensembling', vals: c.single }, { key: 'noloop', label: '− looping', vals: c.noloop },
-      { key: 'distill', label: '+ distillation', vals: c.distill, notes: [0, 0, 1, 1, 1, 0] }, { key: 'neither', label: 'cycles only', vals: c.neither }],
+      { key: 'distill', label: '+ distillation', vals: c.distill }, { key: 'neither', label: 'cycles only', vals: c.neither }],
       { full: [0, 0, 0, 0, 1, 1], single: [0, 0, 0, 0, 0, 1], noloop: [0, 0, 0, 0, 1, 1], distill: [0, 0, 0, 0, 1, 1], neither: [0, 0, 0, 0, 1, 1] });
   };
 
