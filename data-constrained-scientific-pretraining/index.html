@@ -301,8 +301,6 @@
       <div class="scroll"><table class="tab">
         <thead><tr><th class="r">$U$</th><th class="r">single pass</th><th class="r">Evo 2 recipe</th><th class="r">our recipe</th><th class="r">× single pass</th><th class="r">× Evo 2 recipe</th></tr></thead>
         <tbody>
-          <tr><td class="r">5M</td><td class="r">0.475</td><td class="r">0.475</td><td class="r">0.486</td><td class="r">—</td><td class="r">—</td></tr>
-          <tr><td class="r">10M</td><td class="r">0.477</td><td class="r">0.475</td><td class="r">0.487</td><td class="r">—</td><td class="r">—</td></tr>
           <tr><td class="r">20M</td><td class="r">0.479</td><td class="r">0.479</td><td class="r">0.552</td><td class="r">10.9×</td><td class="r">45.7×</td></tr>
           <tr><td class="r">50M</td><td class="r">0.486</td><td class="r">0.479</td><td class="r hi">0.652</td><td class="r">13.0×</td><td class="r">44.9×†</td></tr>
           <tr><td class="r">100M</td><td class="r">0.499</td><td class="r">0.486</td><td class="r hi">0.700</td><td class="r">12.8×</td><td class="r">33.7×†</td></tr>
@@ -310,7 +308,7 @@
           <tr><td class="r">500M</td><td class="r">0.629</td><td class="r">0.520</td><td class="r"></td><td class="r"></td><td class="r"></td></tr>
           <tr><td class="r">1B</td><td class="r">0.689</td><td class="r">0.557</td><td class="r"></td><td class="r"></td><td class="r"></td></tr>
           <tr><td class="r">2B</td><td class="r">0.718</td><td class="r">0.638</td><td class="r"></td><td class="r"></td><td class="r"></td></tr>
-          <tr><td class="r note" colspan="6">At 5–10M every model is near chance. From 50M our recipe is above the Evo 2 recipe's 2B score, so the measured multipliers are lower bounds of &gt;40×, &gt;20× and &gt;10× at 50M, 100M and 200M. At 20M the recipe's AUROC (0.552) is only 0.05 above chance, so that multiplier is uncertain. Evo 2 7B, trained on all of OpenGenome2 including human genomes, scores 0.932.</td></tr>
+          <tr><td class="r note" colspan="6">At 5M and 10M every model is at chance (AUROC 0.475–0.487), so those budgets have no multiplier and are not shown (Figure 2 includes them). From 50M our recipe is above the Evo 2 recipe's 2B score, so the measured multipliers are lower bounds of &gt;40×, &gt;20× and &gt;10× at 50M, 100M and 200M. At 20M the recipe's AUROC (0.552) is only 0.05 above chance, so that multiplier is uncertain. Evo 2 7B, trained on all of OpenGenome2 including human genomes, scores 0.932.</td></tr>
         </tbody>
       </table></div>
     </figure>
