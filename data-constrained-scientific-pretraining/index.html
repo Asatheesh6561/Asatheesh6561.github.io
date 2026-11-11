@@ -169,6 +169,9 @@
   .triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 14px; }
   @media (max-width: 760px) { .triple { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 480px) { .triple { grid-template-columns: minmax(0, 1fr); } }
+  .quad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 12px; }
+  @media (max-width: 760px) { .quad { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 480px) { .quad { grid-template-columns: minmax(0, 1fr); } }
   .double { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
   @media (max-width: 640px) { .double { grid-template-columns: minmax(0, 1fr); } }
   .task-single { max-width: 390px; margin: 0 auto; }
@@ -593,6 +596,7 @@
   const zip = (U, Y, f) => U.map((u, i) => [u, Y[i], f ? f(u, Y[i], i) : null]);
   const fig = {};
   const SM = { w: 300, h: 300, m: { l: 46, r: 14, t: 42, b: 40 } };
+  const QM = { w: 215, h: 230, m: { l: 42, r: 17, t: 42, b: 38 } };   // four panels per row: a smaller canvas keeps text legible
 
   /* Figure 1: pretraining loss, one panel per domain */
   fig.pre = () => {
@@ -649,7 +653,7 @@
     const digits = Math.max(0, -Math.floor(Math.log10(step))) + (factor === 2.5 ? 1 : 0);
     return { dom: task.higher ? [start, end] : [end, start], ticks, fmt: v => v.toFixed(digits), label: task.metric + (task.higher ? ' ↑' : ' ↓') };
   };
-  const fineTask = (task, color, refU, U, extU, externalName) => {
+  const fineTask = (task, color, refU, U, extU, externalName, size = SM) => {
     const score = v => v.toFixed(4);
     const maxU = Math.max(...refU, ...U, ...(extU || []));
     const xDomain = maxU > 3000 ? [4, 5200] : maxU >= 2000 ? [4, 2600] : [4, 850];
@@ -660,18 +664,18 @@
         pts: zip(extU, task.ext, (u, v) => `${externalName} ${tok(u)}: ${score(v)}`) }] : []),
       ...(task.one ? [{ k: 'one', color, width: 2.4, size: 3.4, pts: zip(U, task.one, (u, v) => `recipe ${tok(u)}: ${score(v)}`) }] : [])
     ];
-    return '<div class="plot small">' + plot({ ...SM, aria: `${task.suite ? task.suite + ' ' : ''}${task.name} fine-tuning ${task.metric}`,
+    return '<div class="plot small">' + plot({ ...size, aria: `${task.suite ? task.suite + ' ' : ''}${task.name} fine-tuning ${task.metric}`,
       title: (task.suite ? task.suite + ' · ' : '') + task.name, titleColor: color,
       x: { log: true, dom: xDomain, ticks: xTicks, fmt: tok, label: 'unique pretraining tokens' },
       hlines: task.rand != null ? [{ y: task.rand, label: 'random init', color: C.muted, lx: 60, below: !task.higher }] : [],
       y: taskAxis(task), series }) + '</div>';
   };
 
-  /* Figures 3-5: fine-tuning per domain (three panels per row) */
+  /* Figures 3-5: fine-tuning per domain (molecules and crystals four panels per row) */
   fig.ftchem = () => {
     const c = D.chem.ft;
-    let s = taskLegend() + '<div class="triple">';
-    c.tasks.forEach(task => { s += fineTask(task, C.chem, c.refU, D.chem.U, c.extU, 'Xu et al.'); });
+    let s = taskLegend() + '<div class="quad">';
+    c.tasks.forEach(task => { s += fineTask(task, C.chem, c.refU, D.chem.U, c.extU, 'Xu et al.', QM); });
     return s + '</div>';
   };
   fig.ftdna = () => {
@@ -692,8 +696,8 @@
     return s + '</div>';
   };
   fig.ftcryst = () => {
-    let s = taskLegend() + '<div class="triple">';
-    D.crystal.mb_tasks.forEach(task => { s += fineTask(task, C.cryst, D.crystal.mb.U, D.crystal.U, D.crystal.mb.U, 'CrystaLLM recipe'); });
+    let s = taskLegend() + '<div class="quad">';
+    D.crystal.mb_tasks.forEach(task => { s += fineTask(task, C.cryst, D.crystal.mb.U, D.crystal.U, D.crystal.mb.U, 'CrystaLLM recipe', QM); });
     return s + '</div>';
   };
 
