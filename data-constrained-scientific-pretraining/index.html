@@ -328,63 +328,20 @@
     </figure>
 
     <h2 id="downstream"><span class="num">4</span>Downstream Transfer</h2>
-    <p>A lower pretraining loss is only useful if it helps on real tasks. We evaluate transfer in two ways: by fine-tuning the pretrained model on a task, and by using it directly in zero-shot tests.</p>
+    <p>A lower pretraining loss is only useful if it helps on real tasks. We evaluate transfer in two ways: by using the pretrained model directly in zero-shot tests, and by fine-tuning it on a task.</p>
 
-    <p>All fine-tuning in the main text uses small LoRA adapters on a frozen pretrained network, so a task's score reflects what pretraining put into the representation. We fine-tune single checkpoints from the recipe and from the single-epoch frontier at each budget, and report each domain's tasks separately (Figures 3–5).</p>
-
-    <h3 id="ft-molecules"><span class="num">4.1</span>Fine-tuning: Molecules</h3>
-    <p>BACE, BBBP, ClinTox, SIDER and Tox21 are classification benchmarks scored by ROC-AUC, and ESOL, FreeSolv and Lipophilicity are regression benchmarks scored by RMSE, all on scaffold splits. Pooled over the eight tasks, the recipe trained on 50M unique tokens fine-tunes better than a single pass over 3B tokens, and from 100M it overtakes the best released model of Xu et al. The individual curves show how the gain varies between tasks.</p>
-
-    <figure id="fig-ft-chem">
-      <div class="panel wrap" data-fig="ftchem"></div>
-      <figcaption><span class="fignum">Figure 3:</span> <span class="dom chem">Molecules</span>: LoRA fine-tuning on eight MoleculeNet tasks (scaffold splits, mean of ten splits), against unique pretraining tokens. Stars: the released checkpoints of Xu et al., fine-tuned with the same protocol. RMSE axes are reversed so that up is better on every panel. Axis ranges differ between tasks.</figcaption>
-    </figure>
-
-    <h3 id="ft-dna"><span class="num">4.2</span>Fine-tuning: DNA</h3>
-    <p>Gene annotation labels each base of a 2,046-base window as intergenic, intronic, non-coding exonic or coding, in six genera that no model trained on. At 5M–20M tokens, the recipe's averaged fine-tuned snapshots are worth 8.2–10.7× as much unique data, and from 50M on they beat a single pass over 2B tokens.</p>
-    <p>We also fine-tune on all 27 eukaryotic tasks of the GUE suite (<a class="ref" data-ref="dnabert2">Zhou et al.</a>): histone marks in yeast, transcription-factor binding in human and mouse, promoter detection and splice-site prediction. Each checkpoint is fine-tuned with the gene-annotation protocol, the learning rate is chosen by validation MCC, and we report test MCC. A randomly initialised network under the same adapters is the no-pretraining control. Averaged over the 27 tasks, the recipe is worth 2.8–15.5× as much unique data as a single pass (Table 5), and at 200M it comes within 0.01 MCC of a single pass over 2B tokens. Against Evo 2's recipe on the scaled-down Evo 2 it is behind at 5M, level at 10M and ahead from 20M on.</p>
-    <p>We leave out the 18 Nucleotide Transformer tasks. On the six we ran in full, a single pass gains only 0.06 MCC between 5M and 2B unique tokens, too little to measure a data multiplier; the recipe is ahead of it at five of six budgets, by at most 0.015 MCC. The results use one fine-tuning seed and one recipe run per budget, and single-task differences under about 0.02 MCC are within noise.</p>
-
-    <figure id="fig-ft-dna">
-      <div class="panel wrap" data-fig="ftdna"></div>
-      <figcaption><span class="fignum">Figure 4:</span> <span class="dom dna">DNA</span>: LoRA fine-tuning on gene annotation (macro-F1, six held-out genera) and on the 27 GUE benchmarks (mean test MCC over tasks), against unique pretraining tokens. Stars: Evo 2's recipe on the scaled-down Evo 2. Dotted lines: a randomly initialised network under the same adapters. Labels show data multipliers against the single pass, with † marking extrapolated estimates.</figcaption>
-    </figure>
-
-    <figure class="table" id="tab-dna-lora">
-      <figcaption><span class="fignum">Table 5:</span> <span class="dom dna">DNA</span>: LoRA fine-tuning on the 27 GUE tasks, mean test MCC over tasks. The multiplier is the unique data a single pass needs for the same mean (log-interpolated on its curve, 5M–2B). Ahead / behind: tasks where the recipe leads or trails by more than 0.01 MCC. A single pass over 2B tokens scores 0.708, Evo 2's recipe at 2B 0.724, and random initialisation 0.546.</figcaption>
-      <div class="scroll"><table class="tab">
-        <thead><tr><th class="r">$U$</th><th class="r">recipe</th><th class="r">single pass</th><th class="r">Evo 2 recipe</th><th class="r">multiplier</th><th class="r">ahead / behind single pass</th><th class="r">ahead / behind Evo 2 recipe</th></tr></thead>
-        <tbody>
-          <tr><td class="r">5M</td><td class="r hi">0.625</td><td class="r">0.598</td><td class="r">0.646</td><td class="r hi">2.8×</td><td class="r">16 / 3</td><td class="r">3 / 17</td></tr>
-          <tr><td class="r">10M</td><td class="r hi">0.654</td><td class="r">0.618</td><td class="r">0.654</td><td class="r hi">7.5×</td><td class="r">16 / 2</td><td class="r">8 / 11</td></tr>
-          <tr><td class="r">20M</td><td class="r hi">0.685</td><td class="r">0.632</td><td class="r">0.666</td><td class="r hi">15.5×</td><td class="r">23 / 1</td><td class="r">15 / 5</td></tr>
-          <tr><td class="r">50M</td><td class="r hi">0.693</td><td class="r">0.646</td><td class="r">0.668</td><td class="r hi">12.4×</td><td class="r">22 / 1</td><td class="r">18 / 0</td></tr>
-          <tr><td class="r">100M</td><td class="r hi">0.688</td><td class="r">0.661</td><td class="r">0.670</td><td class="r hi">4.1×</td><td class="r">21 / 1</td><td class="r">21 / 3</td></tr>
-          <tr><td class="r">200M</td><td class="r hi">0.699</td><td class="r">0.679</td><td class="r">0.681</td><td class="r hi">4.7×</td><td class="r">15 / 2</td><td class="r">18 / 4</td></tr>
-        </tbody>
-      </table></div>
-    </figure>
-
-    <h3 id="ft-crystals"><span class="num">4.3</span>Fine-tuning: Crystals</h3>
-    <p>The Matbench tasks are perovskite formation energy, log shear modulus, log bulk modulus and phonons, each scored by MAE. On perovskites and the two moduli, one fine-tuned snapshot of the recipe beats the single pass at the same budget at every budget; phonons, with only 1,265 structures, gains from 50M on. At 50M unique tokens the recipe beats a single pass over the whole corpus on all four.</p>
-
-    <figure id="fig-ft-cryst">
-      <div class="panel wrap" data-fig="ftcryst"></div>
-      <figcaption><span class="fignum">Figure 5:</span> <span class="dom cryst">Crystals</span>: LoRA fine-tuning on four Matbench tasks (test MAE, mean of the five official folds), against unique pretraining tokens. Error axes are reversed so that up is better. No comparable CrystaLLM Matbench result is available.</figcaption>
-    </figure>
-
-    <h3 id="zero-shot"><span class="num">4.4</span>Zero-shot Evaluation</h3>
-    <p>Zero-shot tests use the pretrained models without any task-specific training (Figure 6, Tables 6 and 7). Each is compared with our single pass and with the published recipe of its domain, run on the same data.</p>
+    <h3 id="zero-shot"><span class="num">4.1</span>Zero-shot Evaluation</h3>
+    <p>Zero-shot tests use the pretrained models without any task-specific training (Figure 3, Tables 5 and 6). Each is compared with our single pass and with the published recipe of its domain, run on the same data.</p>
     <p>For DNA, we score human ClinVar variants by the model's log-likelihood of the alternative sequence relative to the reference. Models trained with our recipe on 50M–200M unique tokens match single-pass models trained on 13–14× more data. Evo 2's recipe on the scaled-down Evo 2 does worse than our single pass: it stays near chance until 500M tokens and reaches 0.638 at 2B. Our recipe passes that from 50M unique tokens, more than 40× less data, and at 20M it matches the Evo 2 recipe at about 0.9B. Humans are absent from our training set, and across models the ClinVar score tracks pretraining loss.</p>
     <p>For crystals, we prompt the model with a composition and ask it to generate a structure. At 5M–50M unique tokens, the recipe matches the true structure as often as a single pass trained on 4.9–10.5× more data, or CrystaLLM's recipe trained on 15–24× more.</p>
 
     <figure id="fig-zeroshot">
       <div class="panel wrap" data-fig="zeroshot"></div>
-      <figcaption><span class="fignum">Figure 6:</span> Zero-shot results by unique pretraining tokens. ClinVar measures variant discrimination with AUROC; crystal structure prediction measures the first sample's match rate from a composition-only prompt. Higher is better in both panels; 0.5 AUROC is chance. Published recipes on the same data: Evo 2's recipe on a scaled-down Evo 2 (ClinVar) and CrystaLLM's one-pass recipe (crystals). Labels show data multipliers, with † marking extrapolated estimates.</figcaption>
+      <figcaption><span class="fignum">Figure 3:</span> Zero-shot results by unique pretraining tokens. ClinVar measures variant discrimination with AUROC; crystal structure prediction measures the first sample's match rate from a composition-only prompt. Higher is better in both panels; 0.5 AUROC is chance. Published recipes on the same data: Evo 2's recipe on a scaled-down Evo 2 (ClinVar) and CrystaLLM's one-pass recipe (crystals). Labels show data multipliers, with † marking extrapolated estimates.</figcaption>
     </figure>
 
     <figure class="table" id="tab-zeroshot">
-      <figcaption><span class="fignum">Table 6:</span> <span class="dom dna">DNA</span>: zero-shot ClinVar variant-effect prediction, AUROC of the alternative-minus-reference log-likelihood on single-nucleotide variants. Multipliers give the unique data our single pass, or Evo 2's recipe on the scaled-down Evo 2, would need for the same AUROC (log-interpolated on the rising part of its curve); † marks estimates extrapolated beyond that curve's 2B point.</figcaption>
+      <figcaption><span class="fignum">Table 5:</span> <span class="dom dna">DNA</span>: zero-shot ClinVar variant-effect prediction, AUROC of the alternative-minus-reference log-likelihood on single-nucleotide variants. Multipliers give the unique data our single pass, or Evo 2's recipe on the scaled-down Evo 2, would need for the same AUROC (log-interpolated on the rising part of its curve); † marks estimates extrapolated beyond that curve's 2B point.</figcaption>
       <div class="scroll"><table class="tab">
         <thead><tr><th class="r">$U$</th><th class="r">single pass</th><th class="r">Evo 2 recipe</th><th class="r">our recipe</th><th class="r">× single pass</th><th class="r">× Evo 2 recipe</th></tr></thead>
         <tbody>
@@ -403,7 +360,7 @@
     </figure>
 
     <figure class="table" id="tab-csp">
-      <figcaption><span class="fignum">Table 7:</span> <span class="dom cryst">Crystals</span>: zero-shot structure prediction, match rate of the first of 20 samples for each of 8,682 held-out compositions (CrystaLLM's protocol). Multipliers give the unique data our single pass, or CrystaLLM's recipe for one pass, would need for the same match rate; † marks estimates extrapolated beyond that curve's 694M point (the whole corpus).</figcaption>
+      <figcaption><span class="fignum">Table 6:</span> <span class="dom cryst">Crystals</span>: zero-shot structure prediction, match rate of the first of 20 samples for each of 8,682 held-out compositions (CrystaLLM's protocol). Multipliers give the unique data our single pass, or CrystaLLM's recipe for one pass, would need for the same match rate; † marks estimates extrapolated beyond that curve's 694M point (the whole corpus).</figcaption>
       <div class="scroll"><table class="tab">
         <thead><tr><th class="r">$U$</th><th class="r">single pass</th><th class="r">CrystaLLM recipe</th><th class="r">our recipe</th><th class="r">× single pass</th><th class="r">× CrystaLLM recipe</th></tr></thead>
         <tbody>
@@ -418,6 +375,49 @@
           <tr><td class="r note" colspan="6">From 100M our recipe beats a single pass over the whole corpus, and from 50M CrystaLLM's recipe over the whole corpus; the measured multipliers there are lower bounds (&gt;6.9× and &gt;3.5× on our single pass; &gt;13.9×, &gt;6.9× and &gt;3.5× on CrystaLLM's recipe).</td></tr>
         </tbody>
       </table></div>
+    </figure>
+
+    <p>All fine-tuning in the main text uses small LoRA adapters on a frozen pretrained network, so a task's score reflects what pretraining put into the representation. We fine-tune single checkpoints from the recipe and from the single-epoch frontier at each budget, and report each domain's tasks separately (Figures 4–6).</p>
+
+    <h3 id="ft-molecules"><span class="num">4.2</span>Fine-tuning: Molecules</h3>
+    <p>BACE, BBBP, ClinTox, SIDER and Tox21 are classification benchmarks scored by ROC-AUC, and ESOL, FreeSolv and Lipophilicity are regression benchmarks scored by RMSE, all on scaffold splits. Pooled over the eight tasks, the recipe trained on 50M unique tokens fine-tunes better than a single pass over 3B tokens, and from 100M it overtakes the best released model of Xu et al. The individual curves show how the gain varies between tasks.</p>
+
+    <figure id="fig-ft-chem">
+      <div class="panel wrap" data-fig="ftchem"></div>
+      <figcaption><span class="fignum">Figure 4:</span> <span class="dom chem">Molecules</span>: LoRA fine-tuning on eight MoleculeNet tasks (scaffold splits, mean of ten splits), against unique pretraining tokens. Stars: the released checkpoints of Xu et al., fine-tuned with the same protocol. RMSE axes are reversed so that up is better on every panel. Axis ranges differ between tasks.</figcaption>
+    </figure>
+
+    <h3 id="ft-dna"><span class="num">4.3</span>Fine-tuning: DNA</h3>
+    <p>Gene annotation labels each base of a 2,046-base window as intergenic, intronic, non-coding exonic or coding, in six genera that no model trained on. At 5M–20M tokens, the recipe's averaged fine-tuned snapshots are worth 8.2–10.7× as much unique data, and from 50M on they beat a single pass over 2B tokens.</p>
+    <p>We also fine-tune on all 27 eukaryotic tasks of the GUE suite (<a class="ref" data-ref="dnabert2">Zhou et al.</a>): histone marks in yeast, transcription-factor binding in human and mouse, promoter detection and splice-site prediction. Each checkpoint is fine-tuned with the gene-annotation protocol, the learning rate is chosen by validation MCC, and we report test MCC. A randomly initialised network under the same adapters is the no-pretraining control. Averaged over the 27 tasks, the recipe is worth 2.8–15.5× as much unique data as a single pass (Table 7), and at 200M it comes within 0.01 MCC of a single pass over 2B tokens. Against Evo 2's recipe on the scaled-down Evo 2 it is behind at 5M, level at 10M and ahead from 20M on.</p>
+    <p>We leave out the 18 Nucleotide Transformer tasks. On the six we ran in full, a single pass gains only 0.06 MCC between 5M and 2B unique tokens, too little to measure a data multiplier; the recipe is ahead of it at five of six budgets, by at most 0.015 MCC. The results use one fine-tuning seed and one recipe run per budget, and single-task differences under about 0.02 MCC are within noise.</p>
+
+    <figure id="fig-ft-dna">
+      <div class="panel wrap" data-fig="ftdna"></div>
+      <figcaption><span class="fignum">Figure 5:</span> <span class="dom dna">DNA</span>: LoRA fine-tuning on gene annotation (macro-F1, six held-out genera) and on the 27 GUE benchmarks (mean test MCC over tasks), against unique pretraining tokens. Stars: Evo 2's recipe on the scaled-down Evo 2. Dotted lines: a randomly initialised network under the same adapters. Labels show data multipliers against the single pass, with † marking extrapolated estimates.</figcaption>
+    </figure>
+
+    <figure class="table" id="tab-dna-lora">
+      <figcaption><span class="fignum">Table 7:</span> <span class="dom dna">DNA</span>: LoRA fine-tuning on the 27 GUE tasks, mean test MCC over tasks. The multiplier is the unique data a single pass needs for the same mean (log-interpolated on its curve, 5M–2B). Ahead / behind: tasks where the recipe leads or trails by more than 0.01 MCC. A single pass over 2B tokens scores 0.708, Evo 2's recipe at 2B 0.724, and random initialisation 0.546.</figcaption>
+      <div class="scroll"><table class="tab">
+        <thead><tr><th class="r">$U$</th><th class="r">recipe</th><th class="r">single pass</th><th class="r">Evo 2 recipe</th><th class="r">multiplier</th><th class="r">ahead / behind single pass</th><th class="r">ahead / behind Evo 2 recipe</th></tr></thead>
+        <tbody>
+          <tr><td class="r">5M</td><td class="r hi">0.625</td><td class="r">0.598</td><td class="r">0.646</td><td class="r hi">2.8×</td><td class="r">16 / 3</td><td class="r">3 / 17</td></tr>
+          <tr><td class="r">10M</td><td class="r hi">0.654</td><td class="r">0.618</td><td class="r">0.654</td><td class="r hi">7.5×</td><td class="r">16 / 2</td><td class="r">8 / 11</td></tr>
+          <tr><td class="r">20M</td><td class="r hi">0.685</td><td class="r">0.632</td><td class="r">0.666</td><td class="r hi">15.5×</td><td class="r">23 / 1</td><td class="r">15 / 5</td></tr>
+          <tr><td class="r">50M</td><td class="r hi">0.693</td><td class="r">0.646</td><td class="r">0.668</td><td class="r hi">12.4×</td><td class="r">22 / 1</td><td class="r">18 / 0</td></tr>
+          <tr><td class="r">100M</td><td class="r hi">0.688</td><td class="r">0.661</td><td class="r">0.670</td><td class="r hi">4.1×</td><td class="r">21 / 1</td><td class="r">21 / 3</td></tr>
+          <tr><td class="r">200M</td><td class="r hi">0.699</td><td class="r">0.679</td><td class="r">0.681</td><td class="r hi">4.7×</td><td class="r">15 / 2</td><td class="r">18 / 4</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+
+    <h3 id="ft-crystals"><span class="num">4.4</span>Fine-tuning: Crystals</h3>
+    <p>The Matbench tasks are perovskite formation energy, log shear modulus, log bulk modulus and phonons, each scored by MAE. On perovskites and the two moduli, one fine-tuned snapshot of the recipe beats the single pass at the same budget at every budget; phonons, with only 1,265 structures, gains from 50M on. At 50M unique tokens the recipe beats a single pass over the whole corpus on all four.</p>
+
+    <figure id="fig-ft-cryst">
+      <div class="panel wrap" data-fig="ftcryst"></div>
+      <figcaption><span class="fignum">Figure 6:</span> <span class="dom cryst">Crystals</span>: LoRA fine-tuning on four Matbench tasks (test MAE, mean of the five official folds), against unique pretraining tokens. Error axes are reversed so that up is better. No comparable CrystaLLM Matbench result is available.</figcaption>
     </figure>
 
     <h2 id="components"><span class="num">5</span>Which Components Matter?</h2>
@@ -644,7 +644,7 @@
   const fig = {};
   const SM = { w: 300, h: 300, m: { l: 46, r: 14, t: 42, b: 40 } };
 
-  /* Figure 2: pretraining loss, one panel per domain */
+  /* Figure 1: pretraining loss, one panel per domain */
   fig.pre = () => {
     const spec = {
       chem: { d: D.chem, x: [4, 5200], xt: [5, 50, 500, 4400], y: [0.555, 0.73], yt: [0.56, 0.60, 0.64, 0.68, 0.72], f: 2, skip: [150], label: 'Validation loss (nats/token)' },
@@ -673,7 +673,7 @@
     return s + '</div>';
   };
 
-  /* Figure 3: multipliers on one axis */
+  /* Figure 2: multipliers on one axis */
   fig.mult = () => {
     const mk = (key, d) => {
       const col = C[key];
@@ -741,7 +741,7 @@
       y: taskAxis(task), series }) + '</div>';
   };
 
-  /* Figures 3-5: fine-tuning per domain (three panels per row) */
+  /* Figures 4-6: fine-tuning per domain (three panels per row) */
   fig.ftchem = () => {
     const c = D.chem.ft;
     let s = taskLegend() + '<div class="triple">';
@@ -771,7 +771,7 @@
     return s + '</div>';
   };
 
-  /* Figure 5: zero-shot evaluation */
+  /* Figure 3: zero-shot evaluation */
   fig.zeroshot = () => {
     const cv = D.dna.clinvar, zs = D.crystal.zs;
     let s = taskLegend() + '<div class="double">';
@@ -789,7 +789,7 @@
     return s + '</div>';
   };
 
-  /* Figure 6: ablation heatmaps, one per domain */
+  /* Figure 7: ablation heatmaps, one per domain */
   const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   const mix = (c0, c1, t) => { const a = hex(c0), b = hex(c1); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`; };
   const seq = (col, t) => t < .55 ? mix('#f3f5f8', col, t / .55) : mix(col, '#0f172a', (t - .55) / .45 * .55);
